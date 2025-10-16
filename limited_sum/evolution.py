@@ -7,8 +7,6 @@ from .player import Player
 
 
 class Evolution:
-
-    # Este método ya está implementado
     def __init__(
         self,
         players: tuple[Player, ...],
@@ -20,24 +18,26 @@ class Evolution:
         initial_population: tuple[int, ...] | int = 100,
     ):
         """
-        Evolutionary tournament
+        Represents an evolutionary tournament, where players evolve through
+        repeated matches and natural selection.
 
-        Parameters:
-            - players (tuple[Player, ...]): tuple of players that will play the
-         tournament
-            - n_rounds (int = 100): number of rounds in each game
-            - error (float = 0.0): error probability (in base 1)
-            - repetitions (int = 2): number of games each player plays against
-         the rest
-            - generations (int = 100): number of generations to simulate
-            - reproductivity (float = 0.05): ratio (base 1) of worst players
-         that will be removed and substituted by the top ones in the natural
-         selection process carried out at the end of each generation
-            - initial_population (tuple[int, ...] | int = 100): list of
-         individuals representing each players (same index as 'players' tuple)
-         OR total population size (int).
+        :param players: Tuple of players that will participate in the tournament.
+        :type players: tuple[Player, ...]
+        :param n_rounds: Number of rounds in each game.
+        :type n_rounds: int
+        :param error: Probability of making an error (0–1 scale).
+        :type error: float
+        :param repetitions: Number of games each player plays against every other player.
+        :type repetitions: int
+        :param generations: Number of generations to simulate.
+        :type generations: int
+        :param reproductivity: Fraction (0–1) of the population that is replaced
+            in each generation by offspring of the top-performing players.
+        :type reproductivity: float
+        :param initial_population: Either the total population size (int) or a tuple
+            specifying the initial number of individuals per player.
+        :type initial_population: tuple[int, ...] | int
         """
-
         self.players = players
         self.n_rounds = n_rounds
         self.error = error
@@ -56,6 +56,8 @@ class Evolution:
         self.total_population = sum(self.initial_population)
         self.repr_int = int(self.total_population * self.reproductivity)
 
+        # Dictionary storing the current population (as Player copies)
+        # and their accumulated scores within each generation.
         self.ranking = {
             copy.deepcopy(player): 0.0
             for i, player in enumerate(self.players)
@@ -66,77 +68,64 @@ class Evolution:
         self, result_tournament: dict[Player, float]
     ) -> tuple[list, list]:
         """
-        Kill the worst guys, reproduce the top ones. Takes the ranking once a
-        face-to-face tournament has been played and returns another ranking,
-        with the evolutionary changes applied
+        Applies the natural selection process based on tournament results.
 
-        Parameters:
-            - result_tournament: the 'tournament.ranking' kind of dict.
+        Removes the least successful players and reproduces the top-performing ones.
+        Returns an updated ranking reflecting the evolutionary changes.
 
-        Results:
-            - Same kind of dict ranking as the input, but with the evolutionary
-         dynamics applied
+        :param result_tournament: Dictionary mapping players to their total scores.
+        :type result_tournament: dict[Player, float]
+        :return: A tuple of two lists: the new population of players and their corresponding scores.
+        :rtype: tuple[list, list]
         """
         raise NotImplementedError
 
     def count_strategies(self) -> dict[str, int]:
         """
-        Counts the number of played alive of each strategy, based on the
-        initial list of players. Should be computed analyzing the
-        'self.ranking' variable. Useful for the results plot/print (not needed
-        for the tournament itself)
+        Counts the number of living individuals for each strategy.
 
-        Results:
-            - A dict, containing as values the name of the players and as
-         values the number of individuals they have now alive in the tournament
+        This method analyzes the ``self.ranking`` dictionary and computes
+        how many instances of each player type remain alive. Useful for
+        tracking population dynamics or generating plots.
+
+        :return: Dictionary mapping player strategy names to their current population count.
+        :rtype: dict[str, int]
         """
         raise NotImplementedError
 
-    def play(self, do_print: bool = False):
+    def play(self, do_print: bool = False) -> None:
         """
-        Main call of the class. Performs the computations to simulate the
-        evolutionary tournament.
+        Simulates the full evolutionary tournament.
 
-        Parameters
-            - do_print (bool = False): if True, should print the ongoing
-         results at the end of each generation (i.e. print generation number,
-         and number of individuals playing each strategy).
+        This method performs the evolutionary process across several generations,
+        where each generation includes all matches, ranking updates, and
+        natural selection. It should update the internal population structure.
+
+        :param do_print: If True, prints intermediate results after each generation,
+            including the generation number and the number of individuals per strategy.
+        :type do_print: bool
+        :return: None
+        :rtype: None
         """
-
-        # HINT: Initialise the following variable
-        #  > count_evolution = {player.name: [val] for player, val in
-        #                       zip(self.players, self.initial_population)}
-        # and use it to store the number of individuals each player retains at
-        # the end of each generation, appending to its corresponding list value
-        # the number of individuals each player has (obtained by calling
-        # 'self.count_strategies()'). For example, at some point, it could have
-        # the following value:
-        # {'always0': [15, 10, 5, 0, 0, 0, 0, 0, 0, 0, 0],
-        #  'random': [5, 10, 15, 19, 14, 9, 4, 0, 0, 0, 0],
-        #  'focal5': [5, 5, 5, 6, 11, 16, 21, 25, 25, 25, 25]}
-
         raise NotImplementedError
 
-    # Si quieres obtener un buen gráfico de la evolución, puedes usar este
-    # método si has seguido la pista indicada en la cabecera del método
-    # anterior. Ya está implementado, pero puede que necesites adaptarlo a tu
-    # código.
     def stackplot(self, count_evolution: dict[str, list]) -> None:
         """
-        Plots a 'stackplot' of the evolution of the tournament
+        Plots a stackplot showing the evolution of player populations over generations.
 
-        Parameters:
-            - count_evolution (dict[Player, list]): a dictionary containing as
-         keys the name of the strategies of the different players of the
-         tournament. Each value is a list, where the 'i'-th position of that
-         list indicates the number of individuals that player has at the end of
-         the 'i'-th generation
+        The x-axis represents the generations, and the y-axis shows the cumulative
+        number of individuals per strategy.
+
+        :param count_evolution: Dictionary mapping strategy names to a list of
+            population counts per generation.
+        :type count_evolution: dict[str, list]
+        :return: None
+        :rtype: None
         """
-
         COLORS = ["blue", "green", "red", "cyan", "magenta", "yellow", "black"]
 
         for i, name in enumerate(count_evolution.keys()):
-            plt.plot([], [], label=name, color=COLORS[(i) % len(COLORS)])
+            plt.plot([], [], label=name, color=COLORS[i % len(COLORS)])
 
         plt.stackplot(
             list(range(self.generations + 1)),

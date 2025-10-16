@@ -7,14 +7,14 @@ THRESHOLD = 5  # Umbral de suma
 
 
 class Game:
-
     def __init__(self, actions: Sequence[int] = ACTIONS, threshold: int = THRESHOLD):
         """
         Represents the limited-sum game.
 
-        Parameters:
-            - actions (list[int]): list of possible actions (default: [0,1,2,3,4,5])
-            - threshold (int): sum threshold beyond which both get 0 (default: 5)
+        :param actions: List of possible actions.
+        :type actions: Sequence[int]
+        :param threshold: Sum threshold beyond which both players get 0.
+        :type threshold: int
         """
         raise NotImplementedError
 
@@ -24,22 +24,21 @@ class Game:
         """
         Payoff matrix of the game.
 
-        Returns:
-            - 6x6 np array of the matrix
+        :return: The 6x6 payoff matrix.
+        :rtype: numpy.ndarray
         """
         raise NotImplementedError
 
     @abstractmethod
     def evaluate_result(self, a_1: int, a_2: int) -> tuple[float, float]:
         """
-        Given two actions, returns the payoffs of the two players.
+        Given two actions, returns the payoffs of both players.
 
-        Parameters:
-            - a_1 (int): action of player 1 (0 to 5)
-            - a_2 (int): action of player 2 (0 to 5)
-
-        Returns:
-            - tuple of two floats, being the first and second values the payoff
-            for the first and second player, respectively.
+        :param a_1: Action of player 1 (0 to 5).
+        :type a_1: int
+        :param a_2: Action of player 2 (0 to 5).
+        :type a_2: int
+        :return: Tuple containing the payoffs of player 1 and player 2, respectively.
+        :rtype: tuple[float, float]
         """
         raise NotImplementedError

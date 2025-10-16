@@ -2,11 +2,11 @@
 
 import itertools
 
-from limited_sum.evolution import Evolution
-from limited_sum.game import ACTIONS, Game
-from limited_sum.match import Match
-from limited_sum.player import Always0, Always3, UniformRandom, Focal5, TitForTat
-from limited_sum.tournament import Tournament
+from limited_sum import Evolution
+from limited_sum import ACTIONS, Game
+from limited_sum import Match
+from limited_sum import Always0, Always3, UniformRandom, Focal5, TitForTat
+from limited_sum import Tournament
 
 # ====================== game.py ======================
 # Prints all possible outcomes of the limited-sum game

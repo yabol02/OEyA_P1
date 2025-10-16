@@ -2,8 +2,6 @@ from .player import Player
 
 
 class Match:
-
-    # Este método ya está implementado
     def __init__(
         self,
         player_1: Player,
@@ -12,15 +10,17 @@ class Match:
         error: float = 0.0,
     ):
         """
-        Match class to represent an iterative limited-sum game
+        Represents an iterative limited-sum game between two players.
 
-        Parameters:
-            - player_1 (Player): first player of the match
-            - player_2 (Player): second player of the match
-            - n_rounds (int = 100): number of rounds in the match
-            - error (float = 0.0): error probability (on a 0-1 scale).
+        :param player_1: First player of the match.
+        :type player_1: Player
+        :param player_2: Second player of the match.
+        :type player_2: Player
+        :param n_rounds: Number of rounds in the match.
+        :type n_rounds: int
+        :param error: Probability of making an error, expressed on a 0–1 scale.
+        :type error: float
         """
-
         assert n_rounds > 0, "'n_rounds' should be greater than 0"
 
         self.player_1 = player_1
@@ -28,20 +28,23 @@ class Match:
         self.n_rounds = n_rounds
         self.error = error
 
-        self.score = (0.0, 0.0)  # this variable will store the final result of
-        # the match, once the 'play()' function has
-        # been called. The two values of the tuple
-        # correspond to the points scored by the first
-        # and second player, respectively.
+        # This variable stores the final result of the match once 'play()' is called.
+        # The tuple contains the points obtained by the first and second player,
+        # respectively.
+        self.score = (0.0, 0.0)
 
     def play(self, do_print: bool = False) -> None:
         """
-        Main call of the class. Play the match.
-        Stores the final result in 'self.score'
+        Plays the match between both players.
 
-        Parameters
-            - do_print (bool = False): if True, should print the ongoing
-            results at the end of each round (i.e. print round number, last
-            actions of both players and ongoing score).
+        This method executes all rounds of the match, updates the internal
+        state, and stores the final result in ``self.score``.
+
+        :param do_print: If True, prints the intermediate results after each round,
+            including the round number, the last actions of both players, and the
+            ongoing score.
+        :type do_print: bool
+        :return: None
+        :rtype: None
         """
         raise NotImplementedError
