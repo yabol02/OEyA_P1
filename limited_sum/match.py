@@ -1,12 +1,16 @@
 from .player import Player
 
+
 class Match:
 
     # Este método ya está implementado
-    def __init__(self, player_1: Player,
-                       player_2: Player,
-                       n_rounds: int = 100,
-                       error: float = 0.0):
+    def __init__(
+        self,
+        player_1: Player,
+        player_2: Player,
+        n_rounds: int = 100,
+        error: float = 0.0,
+    ):
         """
         Match class to represent an iterative limited-sum game
 
@@ -25,11 +29,10 @@ class Match:
         self.error = error
 
         self.score = (0.0, 0.0)  # this variable will store the final result of
-                                 # the match, once the 'play()' function has
-                                 # been called. The two values of the tuple
-                                 # correspond to the points scored by the first
-                                 # and second player, respectively.
-
+        # the match, once the 'play()' function has
+        # been called. The two values of the tuple
+        # correspond to the points scored by the first
+        # and second player, respectively.
 
     def play(self, do_print: bool = False) -> None:
         """

@@ -5,16 +5,20 @@ import numpy as np
 
 from .player import Player
 
+
 class Evolution:
 
     # Este método ya está implementado
-    def __init__(self, players: tuple[Player, ...],
-                       n_rounds: int = 100,
-                       error: float = 0.0,
-                       repetitions: int = 2,
-                       generations: int = 100,
-                       reproductivity: float = 0.05,
-                       initial_population: tuple[int, ...] | int = 100):
+    def __init__(
+        self,
+        players: tuple[Player, ...],
+        n_rounds: int = 100,
+        error: float = 0.0,
+        repetitions: int = 2,
+        generations: int = 100,
+        reproductivity: float = 0.05,
+        initial_population: tuple[int, ...] | int = 100,
+    ):
         """
         Evolutionary tournament
 
@@ -42,22 +46,25 @@ class Evolution:
         self.reproductivity = reproductivity
 
         if isinstance(initial_population, int):
-            self.initial_population = [math.floor(initial_population
-                                       / len(self.players))
-                                       for _ in range(len(self.players))]
+            self.initial_population = [
+                math.floor(initial_population / len(self.players))
+                for _ in range(len(self.players))
+            ]
         else:
             self.initial_population = initial_population
 
         self.total_population = sum(self.initial_population)
         self.repr_int = int(self.total_population * self.reproductivity)
 
-        self.ranking = {copy.deepcopy(player): 0.0 for i, player in
-                        enumerate(self.players)
-                        for _ in range(self.initial_population[i])}
+        self.ranking = {
+            copy.deepcopy(player): 0.0
+            for i, player in enumerate(self.players)
+            for _ in range(self.initial_population[i])
+        }
 
-
-    def natural_selection(self, result_tournament: dict[Player, float]) \
-                          -> tuple[list,list]:
+    def natural_selection(
+        self, result_tournament: dict[Player, float]
+    ) -> tuple[list, list]:
         """
         Kill the worst guys, reproduce the top ones. Takes the ranking once a
         face-to-face tournament has been played and returns another ranking,
@@ -72,7 +79,6 @@ class Evolution:
         """
         raise NotImplementedError
 
-
     def count_strategies(self) -> dict[str, int]:
         """
         Counts the number of played alive of each strategy, based on the
@@ -85,7 +91,6 @@ class Evolution:
          values the number of individuals they have now alive in the tournament
         """
         raise NotImplementedError
-
 
     def play(self, do_print: bool = False):
         """
@@ -126,16 +131,18 @@ class Evolution:
          tournament. Each value is a list, where the 'i'-th position of that
          list indicates the number of individuals that player has at the end of
          the 'i'-th generation
-         """
+        """
 
-        COLORS = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'black']
+        COLORS = ["blue", "green", "red", "cyan", "magenta", "yellow", "black"]
 
         for i, name in enumerate(count_evolution.keys()):
-            plt.plot([], [], label=name, color= COLORS[(i) % len(COLORS)])
+            plt.plot([], [], label=name, color=COLORS[(i) % len(COLORS)])
 
-        plt.stackplot(list(range(self.generations + 1)),
-                      np.array(list(count_evolution.values())), colors=COLORS)
+        plt.stackplot(
+            list(range(self.generations + 1)),
+            np.array(list(count_evolution.values())),
+            colors=COLORS,
+        )
 
         plt.legend()
         plt.show()
-

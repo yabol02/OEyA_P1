@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Self
 from .game import Game
 
+
 class Player(ABC):
 
     # Este método ya está implementado
@@ -18,13 +19,12 @@ class Player(ABC):
         self.name = name
         self.game = game
 
-        self.history  = []  # This is the main variable of this class. It is
-                            # intended to store all the history of actions
-                            # performed by this player.
-                            # Example: [0, 1, 2, 3] <- So far, the
-                            # interaction lasts four rounds. In the first one,
-                            # this player chose 0. In the second, 1. Etc.
-
+        self.history = []  # This is the main variable of this class. It is
+        # intended to store all the history of actions
+        # performed by this player.
+        # Example: [0, 1, 2, 3] <- So far, the
+        # interaction lasts four rounds. In the first one,
+        # this player chose 0. In the second, 1. Etc.
 
     # Este método ya está implementado
     @abstractmethod
@@ -41,7 +41,6 @@ class Player(ABC):
         """
         pass
 
-
     def compute_scores(self, opponent: Self) -> tuple[float, float]:
         """
         Compute the scores for a given opponent
@@ -55,7 +54,6 @@ class Player(ABC):
         """
         raise NotImplementedError
 
-
     # Este método ya está implementado
     def clean_history(self):
         """Resets the history of the current player"""
@@ -64,12 +62,12 @@ class Player(ABC):
 
 # A continuación se representan las estrategias básicas para el juego de suma limitada
 
+
 class Always0(Player):
 
     def __init__(self, game: Game, name: str = ""):
         """Always chooses 0"""
         raise NotImplementedError
-
 
     def strategy(self, opponent: Player) -> int:
         """Always chooses 0"""
@@ -82,7 +80,6 @@ class Always3(Player):
         """Always chooses 3"""
         raise NotImplementedError
 
-
     def strategy(self, opponent: Player) -> int:
         """Always chooses 3"""
         raise NotImplementedError
@@ -94,7 +91,6 @@ class UniformRandom(Player):
         """Chooses uniformly at random"""
         raise NotImplementedError
 
-
     def strategy(self, opponent: Player) -> int:
         """Chooses uniformly at random"""
         raise NotImplementedError
@@ -105,7 +101,6 @@ class Focal5(Player):
     def __init__(self, game: Game, name: str = ""):
         """Tries to coordinate on i+j=5. Several logics possible."""
         raise NotImplementedError
-
 
     def strategy(self, opponent: Player) -> int:
         """First round: 2, then adapts based on opponent trying to maximize the
@@ -119,11 +114,11 @@ class TitForTat(Player):
         """Tit-for-tat adapted to the JCMA. Several logics possible."""
         raise NotImplementedError
 
-
     def strategy(self, opponent: Player) -> int:
         """Similar to Focal5, but reactive with opponent's actions above 3."""
         raise NotImplementedError
-    
+
+
 # Estrategia del Profesor
 class CastigadorInfernal(Player):
     """

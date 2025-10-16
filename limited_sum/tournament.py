@@ -1,12 +1,16 @@
 from .player import Player
 
+
 class Tournament:
 
     # Este método ya está implementado
-    def __init__(self, players: tuple[Player, ...],
-                       n_rounds: int = 100,
-                       error: float = 0.0,
-                       repetitions: int = 2):
+    def __init__(
+        self,
+        players: tuple[Player, ...],
+        n_rounds: int = 100,
+        error: float = 0.0,
+        repetitions: int = 2,
+    ):
         """
         All-against-all tournament
 
@@ -32,13 +36,11 @@ class Tournament:
         # values.
         self.ranking = {player: 0.0 for player in self.players}  # initial vals
 
-
     def sort_ranking(self) -> None:
         """Sort the ranking by the value (score)"""
         raise NotImplementedError
 
-
-    #pista: utiliza 'itertools.combinations' para hacer los cruces
+    # pista: utiliza 'itertools.combinations' para hacer los cruces
     def play(self) -> None:
         """
         Main call of the class. It must simulate the championship and update
@@ -46,7 +48,6 @@ class Tournament:
         each player in their interactions.
         """
         raise NotImplementedError
-
 
     def plot_results(self):
         """

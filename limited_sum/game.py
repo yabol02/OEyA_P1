@@ -6,7 +6,6 @@ ACTIONS = (0, 1, 2, 3, 4, 5)  # Acciones del juego de suma limitada
 THRESHOLD = 5  # Umbral de suma
 
 
-
 class Game:
 
     def __init__(self, actions: Sequence[int] = ACTIONS, threshold: int = THRESHOLD):
@@ -19,7 +18,6 @@ class Game:
         """
         raise NotImplementedError
 
-
     @property
     @abstractmethod
     def payoff_matrix(self) -> np.ndarray:
@@ -30,7 +28,6 @@ class Game:
             - 6x6 np array of the matrix
         """
         raise NotImplementedError
-
 
     @abstractmethod
     def evaluate_result(self, a_1: int, a_2: int) -> tuple[float, float]:
