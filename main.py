@@ -68,4 +68,4 @@ evolution = Evolution(
     initial_population=(15, 5, 5),
 )
 
-evolution.play(True)
+evolution.play(do_print=True, do_plot=True)

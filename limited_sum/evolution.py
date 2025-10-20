@@ -206,14 +206,32 @@ class Evolution:
         """
         COLORS = ["blue", "green", "red", "cyan", "magenta", "yellow", "black"]
 
-        for i, name in enumerate(count_evolution.keys()):
+        target_length = self.generations + 1
+        padded_counts = {}
+        for name, counts in count_evolution.items():
+            if len(counts) < target_length:
+                padding_needed = target_length - len(counts)
+                padded_counts[name] = counts + [0] * padding_needed
+            else:
+                padded_counts[name] = counts[:target_length]
+
+        data_to_plot = list(padded_counts.values())
+        names_to_plot = list(padded_counts.keys())
+
+
+        for i, name in enumerate(names_to_plot):
             plt.plot([], [], label=name, color=COLORS[i % len(COLORS)])
 
         plt.stackplot(
-            list(range(self.generations + 1)),
-            np.array(list(count_evolution.values())),
+            list(range(target_length)),
+            np.array(data_to_plot),
             colors=COLORS,
         )
+        
+        plt.xlabel("Generación")
+        plt.ylabel("Población Total")
+        plt.title(f"Evolución de la Población de Estrategias ({self.generations} Generaciones)")
 
-        plt.legend()
+        plt.legend(loc='upper right')
+        plt.tight_layout()
         plt.show()
