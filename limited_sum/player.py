@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from random import choice
 from typing import Self
 from .game import Game
 
@@ -24,10 +25,8 @@ class Player(ABC):
         self.name = name
         self.game = game
 
-        # Main variable of this class.
-        # Stores the full history of actions performed by the player.
-        # Example: [0, 1, 2, 3] → in the first round the player chose 0,
-        # in the second round 1, and so on.
+        # Main variable of this class that tores the full history of actions performed by the player.
+        # Example: [0, 1, 2, 3] → in the first round the player chose 0, in the second round 1, and so on.
         self.history = []
 
     @abstractmethod
@@ -35,9 +34,8 @@ class Player(ABC):
         """
         Defines the strategy used by the player to select an action.
 
-        This method must be implemented by all subclasses and returns
-        the action chosen by the player for the next round, possibly based
-        on the opponent's history.
+        This method must be implemented by all subclasses and returns the action chosen by the player
+        for the next round, possibly based on the opponent's history.
 
         :param opponent: Another instance of ``Player`` representing the opponent.
         :type opponent: Player
@@ -52,11 +50,21 @@ class Player(ABC):
 
         :param opponent: Another instance of ``Player`` representing the opponent.
         :type opponent: Player
-        :return: A tuple containing two floats: the current player's payoff
-            and the opponent's payoff.
+        :return: A tuple containing two floats: the current player's payoff and the opponent's payoff.
         :rtype: tuple[float, float]
         """
-        raise NotImplementedError
+        if len(self.history) != len(opponent.history):
+            raise ValueError("Histories must be of the same length to compute scores.")
+        
+        player_score = 0.0
+        opponent_score = 0.0
+
+        for p1_action, p2_action in zip(self.history, opponent.history):
+            p1_payoff, p2_payoff = self.game.evaluate_result(p1_action, p2_action)
+            player_score += p1_payoff
+            opponent_score += p2_payoff
+            
+        return player_score, opponent_score
 
     def clean_history(self) -> None:
         """
@@ -78,7 +86,7 @@ class Always0(Player):
     Strategy that always selects action 0.
     """
 
-    def __init__(self, game: Game, name: str = ""):
+    def __init__(self, game: Game, name: str = "Always 0"):
         """
         Initializes the Always0 player.
 
@@ -87,7 +95,7 @@ class Always0(Player):
         :param name: Optional name of the strategy.
         :type name: str
         """
-        raise NotImplementedError
+        super(Always0, self).__init__(game, name)
 
     def strategy(self, opponent: Player) -> int:
         """
@@ -98,7 +106,7 @@ class Always0(Player):
         :return: Always 0.
         :rtype: int
         """
-        raise NotImplementedError
+        return 0
 
 
 class Always3(Player):
@@ -106,7 +114,7 @@ class Always3(Player):
     Strategy that always selects action 3.
     """
 
-    def __init__(self, game: Game, name: str = ""):
+    def __init__(self, game: Game, name: str ="Always 3"):
         """
         Initializes the Always3 player.
 
@@ -115,7 +123,7 @@ class Always3(Player):
         :param name: Optional name of the strategy.
         :type name: str
         """
-        raise NotImplementedError
+        super(Always3, self).__init__(game, name)
 
     def strategy(self, opponent: Player) -> int:
         """
@@ -126,7 +134,7 @@ class Always3(Player):
         :return: Always 3.
         :rtype: int
         """
-        raise NotImplementedError
+        return 3
 
 
 class UniformRandom(Player):
@@ -134,7 +142,7 @@ class UniformRandom(Player):
     Strategy that chooses an action uniformly at random.
     """
 
-    def __init__(self, game: Game, name: str = ""):
+    def __init__(self, game: Game, name: str = "Uniform Random"):
         """
         Initializes the UniformRandom player.
 
@@ -143,7 +151,7 @@ class UniformRandom(Player):
         :param name: Optional name of the strategy.
         :type name: str
         """
-        raise NotImplementedError
+        super(UniformRandom, self).__init__(game, name)
 
     def strategy(self, opponent: Player) -> int:
         """
@@ -154,7 +162,7 @@ class UniformRandom(Player):
         :return: A random integer between 0 and 5.
         :rtype: int
         """
-        raise NotImplementedError
+        return choice(self.game.actions)
 
 
 class Focal5(Player):
@@ -162,8 +170,8 @@ class Focal5(Player):
     Strategy that tries to coordinate so that i + j = 5 in each round.
     Several possible implementations exist.
     """
-
-    def __init__(self, game: Game, name: str = ""):
+    COORDINATION_ACTION = 3
+    def __init__(self, game: Game, name: str = "Focal 5"):
         """
         Initializes the Focal5 player.
 
@@ -172,31 +180,40 @@ class Focal5(Player):
         :param name: Optional name of the strategy.
         :type name: str
         """
-        raise NotImplementedError
+        super(Focal5, self).__init__(game, name)
+        
 
     def strategy(self, opponent: Player) -> int:
         """
         Attempts to coordinate on i + j = 5.
 
-        In the first round, it plays 2. In subsequent rounds, it adapts
-        based on the opponent's behavior to maximize the chances of
-        maintaining the efficient sum of 5.
+        In the first round, it plays COORDINATION_ACTION (3). In subsequent rounds, it adapts 
+        based on the opponent's last move to maximize the chances of maintaining the efficient sum of 5.
+
+        - If the opponent played a_opp, the target action is 5 - a_opp.
+        - The chosen action is clipped to be between 0 and 5.
 
         :param opponent: The opposing player.
         :type opponent: Player
         :return: The chosen action (0 to 5).
         :rtype: int
         """
-        raise NotImplementedError
+        if not opponent.history:
+            return self.COORDINATION_ACTION
+        
+        last_opponent_action = opponent.history[-1]
+        desired_action = self.game.threshold - last_opponent_action
+        action = max(0, min(self.game.threshold, desired_action))
+        
+        return action
 
 
 class TitForTat(Player):
     """
-    Reactive strategy inspired by the classic Tit-for-Tat,
-    adapted for the limited-sum game.
+    Reactive strategy inspired by the classic Tit-for-Tat, adapted for the limited-sum game.
     """
-
-    def __init__(self, game: Game, name: str = ""):
+    COOPERATIVE_ACTION = 2
+    def __init__(self, game: Game, name: str = "Tit for Tat"):
         """
         Initializes the TitForTat player.
 
@@ -205,25 +222,28 @@ class TitForTat(Player):
         :param name: Optional name of the strategy.
         :type name: str
         """
-        raise NotImplementedError
+        super(TitForTat, self).__init__(game, name)
 
     def strategy(self, opponent: Player) -> int:
         """
-        Reacts to the opponent's past actions, rewarding cooperation
-        and punishing greedy behavior (actions above 3).
+        Reacts to the opponent's past actions, rewarding cooperation and punishing greedy behavior (actions above 3).
 
         :param opponent: The opposing player.
         :type opponent: Player
         :return: The chosen action (0 to 5).
         :rtype: int
         """
-        raise NotImplementedError
+        if not opponent.history:
+            return self.COOPERATIVE_ACTION
+        
+        last_opponent_action = opponent.history[-1]
+        
+        return last_opponent_action
 
 
 class CastigadorInfernal(Player):
     """
-    Adaptive strategy for the limited-sum game that balances coordination
-    and self-protection.
+    Adaptive strategy for the limited-sum game that balances coordination and self-protection.
 
     Strategy logic:
         - Starts trying to coordinate on i + j = 5 (efficient outcome).
@@ -251,8 +271,7 @@ class CastigadorInfernal(Player):
         """
         Determines the next action based on adaptive cooperation tracking.
 
-        The strategy combines cooperation attempts, punishment for exploitation,
-        and recovery after punishment periods.
+        The strategy combines cooperation attempts, punishment for exploitation, and recovery after punishment periods.
 
         :param opponent: The opposing player.
         :type opponent: Player

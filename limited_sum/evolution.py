@@ -1,8 +1,10 @@
 import copy
+import itertools
 import math
 import matplotlib.pyplot as plt
 import numpy as np
 
+from .match import Match
 from .player import Player
 
 
@@ -56,8 +58,7 @@ class Evolution:
         self.total_population = sum(self.initial_population)
         self.repr_int = int(self.total_population * self.reproductivity)
 
-        # Dictionary storing the current population (as Player copies)
-        # and their accumulated scores within each generation.
+        # Dictionary storing the current population (as Player copies) and their accumulated scores within each generation.
         self.ranking = {
             copy.deepcopy(player): 0.0
             for i, player in enumerate(self.players)
@@ -78,36 +79,112 @@ class Evolution:
         :return: A tuple of two lists: the new population of players and their corresponding scores.
         :rtype: tuple[list, list]
         """
-        raise NotImplementedError
+        sorted_players = sorted(
+            result_tournament.items(), 
+            key=lambda item: item[1], 
+            reverse=True
+        )
+        
+        current_population = [item[0] for item in sorted_players]
+        current_scores = [item[1] for item in sorted_players]
+        
+        replacements = self.repr_int
+        parents = current_population[:replacements]
+        survivors = current_population[:-replacements]
+        survivors_scores = current_scores[:-replacements]
+        
+        offspring = []
+        for parent in parents:
+            new_offspring = copy.deepcopy(parent)
+            new_offspring.clean_history() 
+            offspring.append(new_offspring)
+            
+        new_population = survivors + offspring
+        new_scores = [0] * len(new_population)
+        
+        return new_population, new_scores
 
     def count_strategies(self) -> dict[str, int]:
         """
         Counts the number of living individuals for each strategy.
 
         This method analyzes the ``self.ranking`` dictionary and computes
-        how many instances of each player type remain alive. Useful for
-        tracking population dynamics or generating plots.
+        how many instances of each player type remain alive.
 
         :return: Dictionary mapping player strategy names to their current population count.
         :rtype: dict[str, int]
         """
-        raise NotImplementedError
+        counts = {}
 
-    def play(self, do_print: bool = False) -> None:
+        for player_instance in self.ranking.keys():
+            strategy_name = player_instance.name 
+            counts[strategy_name] = counts.get(strategy_name, 0) + 1
+            
+        return counts
+
+    def play(self, do_print: bool = False, do_plot: bool = False) -> None:
         """
         Simulates the full evolutionary tournament.
 
         This method performs the evolutionary process across several generations,
         where each generation includes all matches, ranking updates, and
-        natural selection. It should update the internal population structure.
+        natural selection.
 
-        :param do_print: If True, prints intermediate results after each generation,
-            including the generation number and the number of individuals per strategy.
+        :param do_print: If True, prints intermediate results after each generation.
         :type do_print: bool
+        :param do_plot: If True, plots the intermediate results as a stackplot.
+        :type do_plot: bool
         :return: None
         :rtype: None
         """
-        raise NotImplementedError
+        self.count_evolution = {}
+        
+        initial_counts = self.count_strategies()
+        for name, count in initial_counts.items():
+            self.count_evolution[name] = [count]
+
+        current_population_list = list(self.ranking.keys())
+        for generation in range(1, self.generations + 1):
+            current_ranking = {player: 0.0 for player in current_population_list}
+            for player_1, player_2 in itertools.combinations(current_population_list, 2):
+                for _ in range(self.repetitions):
+                    match = Match(player_1=player_1, player_2=player_2, n_rounds=self.n_rounds, error=self.error)
+                    match.play(do_print=False)
+                    score_p1, score_p2 = match.score
+                    
+                    current_ranking[player_1] += score_p1
+                    current_ranking[player_2] += score_p2
+                    
+                    player_1.clean_history()
+                    player_2.clean_history()
+            
+            new_population_list, _ = self.natural_selection(current_ranking)
+            current_population_list = new_population_list
+            
+            current_counts = {}
+            for player_instance in current_population_list:
+                name = player_instance.name
+                current_counts[name] = current_counts.get(name, 0) + 1
+                
+            for name, count in current_counts.items():
+                self.count_evolution.setdefault(name, []).append(count)
+            
+            for initial_player in self.players:
+                if initial_player.name not in self.count_evolution:
+                    self.count_evolution[initial_player.name] = [0] * generation
+                    
+            if do_print:
+                print(f"\n--- GENERATION {generation:03d} ---")
+                print("Population count:", current_counts)
+
+        print("\n" + "=" * 50)
+        print(f"EVOLUTIONARY TOURNAMENT FINISHED after {self.generations} generations.")
+        print("=" * 50)
+        
+        self.ranking = current_ranking
+        
+        if do_plot:
+            self.stackplot(self.count_evolution)
 
     def stackplot(self, count_evolution: dict[str, list]) -> None:
         """

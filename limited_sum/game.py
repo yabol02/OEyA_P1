@@ -1,10 +1,9 @@
 import numpy as np
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import Sequence
 
-ACTIONS = (0, 1, 2, 3, 4, 5)  # Acciones del juego de suma limitada
-THRESHOLD = 5  # Umbral de suma
-
+ACTIONS = (0, 1, 2, 3, 4, 5)  # Actions of the limited sum game
+THRESHOLD = 5  # Threshold of the game
 
 class Game:
     def __init__(self, actions: Sequence[int] = ACTIONS, threshold: int = THRESHOLD):
@@ -16,18 +15,25 @@ class Game:
         :param threshold: Sum threshold beyond which both players get 0.
         :type threshold: int
         """
-        raise NotImplementedError
+        self.actions = actions
+        self.threshold = threshold
 
     @property
     @abstractmethod
-    def payoff_matrix(self) -> np.ndarray:
+    def payoff_matrix(self) -> np.ndarray[np.uint8]:
         """
         Payoff matrix of the game.
 
         :return: The 6x6 payoff matrix.
-        :rtype: numpy.ndarray
+        :rtype: numpy.ndarray[numpy.uint8]
         """
-        raise NotImplementedError
+        return np.array(
+            [
+                [(i, j) if i + j <= THRESHOLD else (0, 0) for j in ACTIONS]
+                for i in ACTIONS
+            ],
+            dtype=np.uint8,
+        )
 
     @abstractmethod
     def evaluate_result(self, a_1: int, a_2: int) -> tuple[float, float]:
@@ -39,6 +45,7 @@ class Game:
         :param a_2: Action of player 2 (0 to 5).
         :type a_2: int
         :return: Tuple containing the payoffs of player 1 and player 2, respectively.
-        :rtype: tuple[float, float]
+        :rtype: tuple[int, int]
         """
-        raise NotImplementedError
+        res_1, res_2 = self.payoff_matrix[a_1, a_2]
+        return res_1, res_2

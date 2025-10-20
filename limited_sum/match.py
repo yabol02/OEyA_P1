@@ -1,4 +1,6 @@
+from .game import ACTIONS
 from .player import Player
+from random import random
 
 
 class Match:
@@ -28,23 +30,53 @@ class Match:
         self.n_rounds = n_rounds
         self.error = error
 
+        self.player_1.clean_history()
+        self.player_2.clean_history()
+
         # This variable stores the final result of the match once 'play()' is called.
-        # The tuple contains the points obtained by the first and second player,
-        # respectively.
+        # The tuple contains the points obtained by the first and second player, respectively.
         self.score = (0.0, 0.0)
 
     def play(self, do_print: bool = False) -> None:
         """
         Plays the match between both players.
 
-        This method executes all rounds of the match, updates the internal
-        state, and stores the final result in ``self.score``.
+        This method executes all rounds of the match, updates the internal state, and stores the final 
+        result in ``self.score``.
 
-        :param do_print: If True, prints the intermediate results after each round,
-            including the round number, the last actions of both players, and the
-            ongoing score.
+        :param do_print: If True, prints the intermediate results after each round, including the round
+                            number, the last actions of both players, and the ongoing score.
         :type do_print: bool
         :return: None
         :rtype: None
         """
-        raise NotImplementedError
+        score_p1, score_p2 = 0, 0
+
+        for r in range(self.n_rounds):
+            a_p1 = self.player_1.strategy(self.player_2)
+            a_p2 = self.player_2.strategy(self.player_2)
+            a_p1 = a_p1 if random() > self.error else ACTIONS[max(ACTIONS)-a_p1]
+            a_p2 = a_p2 if random() > self.error else ACTIONS[max(ACTIONS)-a_p2]
+
+            payoff_p1, payoff_p2 = self.player_1.game.evaluate_result(a_p1, a_p2)
+
+            self.player_1.history.append(a_p1)
+            self.player_2.history.append(a_p2)
+
+            score_p1 += payoff_p1
+            score_p2 += payoff_p2
+            if do_print:
+                print(
+                    f"ROUND {r+1:03d} | P1 Action: {a_p1}, P2 Action: {a_p2} \
+                        | P1 Payoff: {payoff_p1}, P2 Payoff: {payoff_p2} \
+                        | Total Score: ({score_p1:.1f}, {score_p2:.1f})"
+                )
+
+        self.score = (score_p1, score_p2)
+        final_score_p1, final_score_p2 = self.player_1.compute_scores(self.player_2)
+        assert abs(final_score_p1 - score_p1) < 1e-6 and abs(final_score_p2 - score_p2) < 1e-6, "Score calculated during play does not match score from compute_scores."
+
+
+        if do_print:
+            print("-" * 60)
+            print(f"MATCH ENDED. FINAL SCORE: P1 ({self.player_1.name}): {self.score[0]:.1f} | P2 ({self.player_2.name}): {self.score[1]:.1f}")
