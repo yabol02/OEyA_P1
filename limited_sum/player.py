@@ -55,7 +55,7 @@ class Player(ABC):
         """
         if len(self.history) != len(opponent.history):
             raise ValueError("Histories must be of the same length to compute scores.")
-        
+
         player_score = 0.0
         opponent_score = 0.0
 
@@ -63,7 +63,7 @@ class Player(ABC):
             p1_payoff, p2_payoff = self.game.evaluate_result(p1_action, p2_action)
             player_score += p1_payoff
             opponent_score += p2_payoff
-            
+
         return player_score, opponent_score
 
     def clean_history(self) -> None:
@@ -114,7 +114,7 @@ class Always3(Player):
     Strategy that always selects action 3.
     """
 
-    def __init__(self, game: Game, name: str ="Always 3"):
+    def __init__(self, game: Game, name: str = "Always 3"):
         """
         Initializes the Always3 player.
 
@@ -170,7 +170,9 @@ class Focal5(Player):
     Strategy that tries to coordinate so that i + j = 5 in each round.
     Several possible implementations exist.
     """
+
     COORDINATION_ACTION = 3
+
     def __init__(self, game: Game, name: str = "Focal 5"):
         """
         Initializes the Focal5 player.
@@ -181,13 +183,12 @@ class Focal5(Player):
         :type name: str
         """
         super(Focal5, self).__init__(game, name)
-        
 
     def strategy(self, opponent: Player) -> int:
         """
         Attempts to coordinate on i + j = 5.
 
-        In the first round, it plays COORDINATION_ACTION (3). In subsequent rounds, it adapts 
+        In the first round, it plays COORDINATION_ACTION (3). In subsequent rounds, it adapts
         based on the opponent's last move to maximize the chances of maintaining the efficient sum of 5.
 
         - If the opponent played a_opp, the target action is 5 - a_opp.
@@ -200,11 +201,11 @@ class Focal5(Player):
         """
         if not opponent.history:
             return self.COORDINATION_ACTION
-        
+
         last_opponent_action = opponent.history[-1]
         desired_action = self.game.threshold - last_opponent_action
         action = max(0, min(self.game.threshold, desired_action))
-        
+
         return action
 
 
@@ -212,7 +213,9 @@ class TitForTat(Player):
     """
     Reactive strategy inspired by the classic Tit-for-Tat, adapted for the limited-sum game.
     """
+
     COOPERATIVE_ACTION = 2
+
     def __init__(self, game: Game, name: str = "Tit for Tat"):
         """
         Initializes the TitForTat player.
@@ -235,9 +238,9 @@ class TitForTat(Player):
         """
         if not opponent.history:
             return self.COOPERATIVE_ACTION
-        
+
         last_opponent_action = opponent.history[-1]
-        
+
         return last_opponent_action
 
 

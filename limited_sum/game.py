@@ -5,6 +5,7 @@ from typing import Sequence
 ACTIONS = (0, 1, 2, 3, 4, 5)  # Actions of the limited sum game
 THRESHOLD = 5  # Threshold of the game
 
+
 class Game:
     def __init__(self, actions: Sequence[int] = ACTIONS, threshold: int = THRESHOLD):
         """

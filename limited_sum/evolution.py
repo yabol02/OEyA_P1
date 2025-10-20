@@ -80,28 +80,26 @@ class Evolution:
         :rtype: tuple[list, list]
         """
         sorted_players = sorted(
-            result_tournament.items(), 
-            key=lambda item: item[1], 
-            reverse=True
+            result_tournament.items(), key=lambda item: item[1], reverse=True
         )
-        
+
         current_population = [item[0] for item in sorted_players]
         current_scores = [item[1] for item in sorted_players]
-        
+
         replacements = self.repr_int
         parents = current_population[:replacements]
         survivors = current_population[:-replacements]
         survivors_scores = current_scores[:-replacements]
-        
+
         offspring = []
         for parent in parents:
             new_offspring = copy.deepcopy(parent)
-            new_offspring.clean_history() 
+            new_offspring.clean_history()
             offspring.append(new_offspring)
-            
+
         new_population = survivors + offspring
         new_scores = [0] * len(new_population)
-        
+
         return new_population, new_scores
 
     def count_strategies(self) -> dict[str, int]:
@@ -117,9 +115,9 @@ class Evolution:
         counts = {}
 
         for player_instance in self.ranking.keys():
-            strategy_name = player_instance.name 
+            strategy_name = player_instance.name
             counts[strategy_name] = counts.get(strategy_name, 0) + 1
-            
+
         return counts
 
     def play(self, do_print: bool = False, do_plot: bool = False) -> None:
@@ -138,7 +136,7 @@ class Evolution:
         :rtype: None
         """
         self.count_evolution = {}
-        
+
         initial_counts = self.count_strategies()
         for name, count in initial_counts.items():
             self.count_evolution[name] = [count]
@@ -146,33 +144,40 @@ class Evolution:
         current_population_list = list(self.ranking.keys())
         for generation in range(1, self.generations + 1):
             current_ranking = {player: 0.0 for player in current_population_list}
-            for player_1, player_2 in itertools.combinations(current_population_list, 2):
+            for player_1, player_2 in itertools.combinations(
+                current_population_list, 2
+            ):
                 for _ in range(self.repetitions):
-                    match = Match(player_1=player_1, player_2=player_2, n_rounds=self.n_rounds, error=self.error)
+                    match = Match(
+                        player_1=player_1,
+                        player_2=player_2,
+                        n_rounds=self.n_rounds,
+                        error=self.error,
+                    )
                     match.play(do_print=False)
                     score_p1, score_p2 = match.score
-                    
+
                     current_ranking[player_1] += score_p1
                     current_ranking[player_2] += score_p2
-                    
+
                     player_1.clean_history()
                     player_2.clean_history()
-            
+
             new_population_list, _ = self.natural_selection(current_ranking)
             current_population_list = new_population_list
-            
+
             current_counts = {}
             for player_instance in current_population_list:
                 name = player_instance.name
                 current_counts[name] = current_counts.get(name, 0) + 1
-                
+
             for name, count in current_counts.items():
                 self.count_evolution.setdefault(name, []).append(count)
-            
+
             for initial_player in self.players:
                 if initial_player.name not in self.count_evolution:
                     self.count_evolution[initial_player.name] = [0] * generation
-                    
+
             if do_print:
                 print(f"\n--- GENERATION {generation:03d} ---")
                 print("Population count:", current_counts)
@@ -180,9 +185,9 @@ class Evolution:
         print("\n" + "=" * 50)
         print(f"EVOLUTIONARY TOURNAMENT FINISHED after {self.generations} generations.")
         print("=" * 50)
-        
+
         self.ranking = current_ranking
-        
+
         if do_plot:
             self.stackplot(self.count_evolution)
 

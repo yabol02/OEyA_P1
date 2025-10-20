@@ -41,7 +41,7 @@ class Match:
         """
         Plays the match between both players.
 
-        This method executes all rounds of the match, updates the internal state, and stores the final 
+        This method executes all rounds of the match, updates the internal state, and stores the final
         result in ``self.score``.
 
         :param do_print: If True, prints the intermediate results after each round, including the round
@@ -55,8 +55,8 @@ class Match:
         for r in range(self.n_rounds):
             a_p1 = self.player_1.strategy(self.player_2)
             a_p2 = self.player_2.strategy(self.player_2)
-            a_p1 = a_p1 if random() > self.error else ACTIONS[max(ACTIONS)-a_p1]
-            a_p2 = a_p2 if random() > self.error else ACTIONS[max(ACTIONS)-a_p2]
+            a_p1 = a_p1 if random() > self.error else ACTIONS[max(ACTIONS) - a_p1]
+            a_p2 = a_p2 if random() > self.error else ACTIONS[max(ACTIONS) - a_p2]
 
             payoff_p1, payoff_p2 = self.player_1.game.evaluate_result(a_p1, a_p2)
 
@@ -74,9 +74,13 @@ class Match:
 
         self.score = (score_p1, score_p2)
         final_score_p1, final_score_p2 = self.player_1.compute_scores(self.player_2)
-        assert abs(final_score_p1 - score_p1) < 1e-6 and abs(final_score_p2 - score_p2) < 1e-6, "Score calculated during play does not match score from compute_scores."
-
+        assert (
+            abs(final_score_p1 - score_p1) < 1e-6
+            and abs(final_score_p2 - score_p2) < 1e-6
+        ), "Score calculated during play does not match score from compute_scores."
 
         if do_print:
             print("-" * 60)
-            print(f"MATCH ENDED. FINAL SCORE: P1 ({self.player_1.name}): {self.score[0]:.1f} | P2 ({self.player_2.name}): {self.score[1]:.1f}")
+            print(
+                f"MATCH ENDED. FINAL SCORE: P1 ({self.player_1.name}): {self.score[0]:.1f} | P2 ({self.player_2.name}): {self.score[1]:.1f}"
+            )
