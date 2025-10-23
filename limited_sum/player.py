@@ -302,7 +302,7 @@ class CastigadorInfernal(Player):
         if self.punishment_mode:
             self.punishment_rounds += 1
             if self.punishment_rounds <= 2:
-                return 0
+                return last_opponent # Vamos a hacer que el castigo sea Tic of Tat
             else:
                 self.punishment_mode = False
                 self.punishment_rounds = 0
@@ -312,7 +312,7 @@ class CastigadorInfernal(Player):
         if last_opponent > 3 and avg_recent > 3.5:
             self.punishment_mode = True
             self.punishment_rounds = 0
-            return 0
+            return last_opponent # Vamos a hacer que el castigo sea Tic of Tat
 
         # Normal coordination attempt
         if last_opponent <= 3:
