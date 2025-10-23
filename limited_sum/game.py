@@ -21,19 +21,19 @@ class Game:
 
     @property
     @abstractmethod
-    def payoff_matrix(self) -> np.ndarray[np.uint8]:
+    def payoff_matrix(self) -> np.ndarray[np.float64]:
         """
         Payoff matrix of the game.
 
         :return: The 6x6 payoff matrix.
-        :rtype: numpy.ndarray[numpy.uint8]
+        :rtype: numpy.ndarray[numpy.float64]
         """
         return np.array(
             [
                 [(i, j) if i + j <= THRESHOLD else (0, 0) for j in ACTIONS]
                 for i in ACTIONS
             ],
-            dtype=np.uint8,
+            dtype=np.float64,
         )
 
     @abstractmethod
