@@ -320,3 +320,73 @@ class CastigadorInfernal(Player):
 
         # Default fallback
         return 2
+
+# ---------------------------------------------------------------------
+# Basic strategies for the limited-sum game
+# ---------------------------------------------------------------------
+class Deterministic_simpletron(Player):
+    """Starts cooperating (return 2) if the player cooperates it returns the same value
+    If the oponent does not cooperate, it switches the strategy from cooperating to being greedy (return 3) or
+    form being greedy to cooperating"""
+
+    def __init__(self, game: Game, name: str = "", pesimist_start: bool = False, tic_for_tat_punishment: bool = False):
+        """
+        Inicializa un agente basado en la estrategia SIMPLETON determinista.
+
+        Parámetros
+        ----------
+        game : Game
+            Objeto del juego al que pertenece el agente.
+        name : str, opcional
+            Nombre del agente (por defecto una cadena vacía).
+        pesimist_start : bool, opcional
+            Indica si el agente debe comenzar con una jugada 'greedy' (3) o 'amigable' (2):
+            - False → comienza cooperando (valor 2).
+            - True  → comienza siendo greedy (valor 3).
+        tic_for_tat_punishment : bool, opcional
+            Controla el tipo de castigo cuando el oponente es greedy (≥3):
+            - False → castigo básico: siempre responde con 3.
+            - True  → castigo tipo "tit-for-tat": replica la última acción del oponente.
+
+        Notas
+        -----
+        El agente sigue la lógica del método SIMPLETON:
+        - Si el oponente coopera (<3), repite su último movimiento.
+        - Si el oponente no coopera (≥3), cambia al modo opuesto (de cooperar a castigar o viceversa).
+        """
+        # Inicialización básica del agente
+        super(Deterministic_simpletron, self).__init__(game, name)
+
+        # Parámetros de configuración
+        self.pesimist_start = pesimist_start
+        self.tic_for_tat_punishmnet = tic_for_tat_punishment
+
+        # Bandera interna para saber si el agente está en modo "castigo"
+        # (True = aplicar castigo; False = comportamiento normal)
+        self.do_punish = False
+
+    def strategy(self, opponent: Player) -> int:
+        if len(self.history) == 0:
+            # Comienza el juego
+            if self.pesimist_start:
+                return 3
+            else:
+                return 2
+        # Rondas sucesivas
+        # Comprobamos que el contrincante sea greedy
+        last_opponent_action = opponent.history[-1]
+        if  last_opponent_action>= 3:
+            # El contrincante es greedy y cambiamos de modo
+            self.do_punish = not(self.do_punish)
+
+        if self.do_punish:
+            # Vamos punishear
+            if self.tic_for_tat_punishmnet:
+                return last_opponent_action
+            else:
+                return 3 # Basico
+        else:
+            # Comportamiento basico: devolver nuestra ultima opcion opcion sea cual sea
+            return self.history[-1]
+                
+
