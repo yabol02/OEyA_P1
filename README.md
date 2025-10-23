@@ -92,3 +92,8 @@ A continuación deberás implementar una estrategia que se enfrentará a las de 
 Los juegos contra tus rivales tendrán un final **no determinista**. Esto quiere decir que el número de rondas que se van a jugar no se sabe con precisión. En lugar de eso, después de cada ronda, la partida tiene una cierta probabilidad de acabar (pequeña). ¿Por qué haremos esto? En juegos iterados con duración finita conocida, la proximidad del final juega un papel crucial en las decisiones estratégicas (e.g., incentivos a desertar en las últimas rondas).
 
 Con el objetivo de dejar esta complejidad adicional fuera, jugaremos un número de rondas aleatorio: puedes pensar que tu estrategia va a jugar "muchas veces" contra cada rival. **En media, se jugarán 100 rondas** (puedes quedarte con ese número). Los puntos obtenidos en cada interacción se normalizarán por el número de rondas jugadas para evitar sesgos por duración variable.
+
+# Para ejecutar tests
+```python
+python -m unittest discover -s tests -v
+```

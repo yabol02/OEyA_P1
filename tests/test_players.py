@@ -119,6 +119,8 @@ class TestCastigadorInfernal(unittest.TestCase):
         self.game = DummyGame()
         self.player = CastigadorInfernal(self.game)
         self.opponent = DummyOpponent(self.game)
+        self.player.clean_history()
+        self.opponent.clean_history()
 
     def test_first_round_returns_2(self):
         self.assertEqual(self.player.strategy(self.opponent), 2)
@@ -168,7 +170,7 @@ class TestCastigadorInfernal(unittest.TestCase):
 
     def test_default_fallback(self):
         self.player.history.append(2)
-        self.opponent.history.append(6)  # >3 but no average > 3.5
+        self.opponent.history.extend([2, 3, 4])  # promedio = (2+3+4)/3 = 3.0 <= 3.5
         self.player.cooperation_score = 0
         action = self.player.strategy(self.opponent)
         self.assertEqual(action, 2)
@@ -204,20 +206,20 @@ class TestDeterministicSimpletron(unittest.TestCase):
         p.history.append(2)
         opponent = DummyOpponent(self.game)
         opponent.history.append(3)  # greedy triggers punish
-        p.strategy(opponent)
+        my_action = p.strategy(opponent)
         self.assertTrue(p.do_punish)
         # With tic_for_tat_punishment=False returns 3 during punish
-        self.assertEqual(p.strategy(opponent), 3)
+        self.assertEqual(my_action, 3)
 
     def test_punish_mode_returns_last_opponent_action_tit_for_tat(self):
         p = Deterministic_simpletron(self.game, tic_for_tat_punishment=True)
         p.history.append(2)
         opponent = DummyOpponent(self.game)
         opponent.history.append(3)
-        p.strategy(opponent)
+        my_action = p.strategy(opponent)
         self.assertTrue(p.do_punish)
         # Punish returns last opponent action
-        self.assertEqual(p.strategy(opponent), 3)
+        self.assertEqual(my_action, 3)
 
     def test_not_punish_returns_last_own_action(self):
         p = Deterministic_simpletron(self.game)
@@ -227,6 +229,17 @@ class TestDeterministicSimpletron(unittest.TestCase):
         p.do_punish = False
         action = p.strategy(opponent)
         self.assertEqual(action, 2)
+    
+    def switches(self):
+        p = Deterministic_simpletron(self.game, tic_for_tat_punishment=True)
+        p.history.append(2)
+        opponent = DummyOpponent(self.game)
+        opponent.history.append(3)
+        p.strategy(opponent)
+        self.assertTrue(p.do_punish)
+        # Punish returns last opponent action
+        self.assertEqual(p.strategy(opponent), 2)
+
 
 if __name__ == "__main__":
     unittest.main()
