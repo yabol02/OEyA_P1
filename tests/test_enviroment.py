@@ -9,15 +9,17 @@ class SimpleGame(Game):
     Implementación concreta mínima del juego para pruebas.
     La recompensa es simplemente (a1, a2) si la suma <= threshold, si no (0, 0).
     """
+
     @property
     def payoff_matrix(self):
         import numpy as np
+
         return np.array(
             [
                 [(i, j) if i + j <= self.threshold else (0, 0) for j in self.actions]
                 for i in self.actions
             ],
-            dtype=object
+            dtype=object,
         )
 
     def evaluate_result(self, a1, a2):

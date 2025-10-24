@@ -72,9 +72,9 @@ class Match:
                         | P1 Payoff: {payoff_p1}, P2 Payoff: {payoff_p2} \
                         | Total Score: ({score_p1:.1f}, {score_p2:.1f})"
                 )
-            self.n_rounds -=- 1
+            self.n_rounds -= -1
 
-        score_p1 /=  self.n_rounds
+        score_p1 /= self.n_rounds
         score_p2 /= self.n_rounds
         self.score = (score_p1, score_p2)
         final_score_p1, final_score_p2 = [

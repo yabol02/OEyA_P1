@@ -302,7 +302,7 @@ class CastigadorInfernal(Player):
         if self.punishment_mode:
             self.punishment_rounds += 1
             if self.punishment_rounds <= 2:
-                return last_opponent # Vamos a hacer que el castigo sea Tic of Tat
+                return last_opponent  # Vamos a hacer que el castigo sea Tic of Tat
             else:
                 self.punishment_mode = False
                 self.punishment_rounds = 0
@@ -312,7 +312,7 @@ class CastigadorInfernal(Player):
         if last_opponent > 3 and avg_recent > 3.5:
             self.punishment_mode = True
             self.punishment_rounds = 0
-            return last_opponent # Vamos a hacer que el castigo sea Tic of Tat
+            return last_opponent  # Vamos a hacer que el castigo sea Tic of Tat
 
         # Normal coordination attempt
         if last_opponent <= 3:
@@ -320,6 +320,7 @@ class CastigadorInfernal(Player):
 
         # Default fallback
         return 2
+
 
 # ---------------------------------------------------------------------
 # Basic strategies for the limited-sum game
@@ -329,7 +330,13 @@ class Deterministic_simpletron(Player):
     If the oponent does not cooperate, it switches the strategy from cooperating to being greedy (return 3) or
     form being greedy to cooperating"""
 
-    def __init__(self, game: Game, name: str = "", pesimist_start: bool = False, tic_for_tat_punishment: bool = False):
+    def __init__(
+        self,
+        game: Game,
+        name: str = "",
+        pesimist_start: bool = False,
+        tic_for_tat_punishment: bool = False,
+    ):
         """
         Inicializa un agente basado en la estrategia SIMPLETON determinista.
 
@@ -375,18 +382,16 @@ class Deterministic_simpletron(Player):
         # Rondas sucesivas
         # Comprobamos que el contrincante sea greedy
         last_opponent_action = opponent.history[-1]
-        if  last_opponent_action>= 3:
+        if last_opponent_action >= 3:
             # El contrincante es greedy y cambiamos de modo
-            self.do_punish = not(self.do_punish)
+            self.do_punish = not (self.do_punish)
 
         if self.do_punish:
             # Vamos punishear
             if self.tic_for_tat_punishmnet:
                 return last_opponent_action
             else:
-                return 3 # Basico
+                return 3  # Basico
         else:
             # Comportamiento basico: devolver nuestra ultima opcion opcion sea cual sea
             return self.history[-1]
-                
-

@@ -3,12 +3,13 @@ from limited_sum.game import Game, ACTIONS, THRESHOLD
 from limited_sum.player import *
 
 
-
 class DummyGame(Game):
     """Implementación mínima de Game solo para testing de Players."""
+
     @property
     def payoff_matrix(self):
         import numpy as np
+
         return np.zeros((6, 6, 2), dtype=int)
 
     def evaluate_result(self, a1, a2):
@@ -17,8 +18,10 @@ class DummyGame(Game):
 
 class DummyOpponent(Player):
     """Oponente ficticio para probar reacciones basadas en el historial."""
+
     def __init__(self, game):
         super().__init__(game)
+
     def strategy(self, opponent: Player) -> int:
         return 0
 
@@ -105,7 +108,9 @@ class TestTitForTat(unittest.TestCase):
         self.opponent = DummyOpponent(self.game)
 
     def test_first_round_returns_cooperative_action(self):
-        self.assertEqual(self.player.strategy(self.opponent), TitForTat.COOPERATIVE_ACTION)
+        self.assertEqual(
+            self.player.strategy(self.opponent), TitForTat.COOPERATIVE_ACTION
+        )
 
     def test_reacts_with_last_opponent_action(self):
         self.opponent.history.append(4)
@@ -139,7 +144,7 @@ class TestCastigadorInfernal(unittest.TestCase):
 
     def test_enters_punishment_mode_on_greedy_average(self):
         self.player.history.append(2)
-        self.opponent.history.extend([5,5,5,5,5])
+        self.opponent.history.extend([5, 5, 5, 5, 5])
         action = self.player.strategy(self.opponent)
         self.assertTrue(self.player.punishment_mode)
         self.assertEqual(action, self.opponent.history[-1])
@@ -229,7 +234,7 @@ class TestDeterministicSimpletron(unittest.TestCase):
         p.do_punish = False
         action = p.strategy(opponent)
         self.assertEqual(action, 2)
-    
+
     def switches(self):
         p = Deterministic_simpletron(self.game, tic_for_tat_punishment=True)
         p.history.append(2)
