@@ -245,6 +245,105 @@ class TestDeterministicSimpletron(unittest.TestCase):
         # Punish returns last opponent action
         self.assertEqual(p.strategy(opponent), 2)
 
+class TestPermissiveTitForTat(unittest.TestCase):
+    
+    def setUp(self):
+        # Configuración común: inicializa el juego y el valor de paciencia por defecto
+        self.game = DummyGame()
+        self.DEFAULT_PATIENCE = 3
+
+    # Test 1: Comprueba la inicialización de la paciencia por defecto y personalizada
+    def test_initialization_patience(self):
+        p_default = PermissiveTitForTat(self.game)
+        self.assertEqual(p_default.patience, self.DEFAULT_PATIENCE)
+        self.assertEqual(p_default.INITIAL_PATIENCE, self.DEFAULT_PATIENCE)
+
+        p_custom = PermissiveTitForTat(self.game, initial_patience=5)
+        self.assertEqual(p_custom.patience, 5)
+        self.assertEqual(p_custom.INITIAL_PATIENCE, 5)
+
+    # Test 2: Comprueba la acción inicial cuando no hay historial
+    def test_initial_action_no_history(self):
+        p = PermissiveTitForTat(self.game)
+        opponent = DummyOpponent(self.game)
+        # Debe devolver 3 (initial action)
+        self.assertEqual(p.strategy(opponent), 3) 
+        # La paciencia no debe cambiar en este punto
+        self.assertEqual(p.patience, self.DEFAULT_PATIENCE)
+
+    # Test 3: Comprueba el comportamiento Tit-for-Tat (devolver la acción del oponente)
+    def test_basic_tit_for_tat_action(self):
+        p = PermissiveTitForTat(self.game, initial_patience=2)
+        opponent = DummyOpponent(self.game)
+        
+        # Oponente elige 4 (codicioso). Y se queda sin paciencia.
+        opponent.history.append(4)
+        self.assertEqual(p.strategy(opponent), p.COOPERATIVE_ACTION)
+        # Oponente elige 4 (codicioso). La acción de PFTFT debe ser 4.
+        opponent.history.append(4)
+        self.assertEqual(p.strategy(opponent), 4)
+
+        # Oponente elige 1 (cooperativo). La acción de PFTFT debe ser Cooperativa de nuevo.
+        opponent.history.append(1)
+        self.assertEqual(p.strategy(opponent), p.COOPERATIVE_ACTION)
+
+    # Test 4: Comprueba la reducción de paciencia con acciones >= 3
+    def test_patience_reduction_on_greedy_opponent(self):
+        p = PermissiveTitForTat(self.game) # Paciencia inicial 3
+        opponent = DummyOpponent(self.game)
+        
+        # Turno 1: Oponente elige 3 (>= 3) -> paciencia 3 -> 2
+        opponent.history.append(3)
+        p.strategy(opponent)
+        self.assertEqual(p.patience, 2)
+        
+        # Turno 2: Oponente elige 5 (>= 3) -> paciencia 2 -> 1
+        opponent.history.append(5)
+        p.strategy(opponent)
+        self.assertEqual(p.patience, 1)
+
+    # Test 5: Comprueba el reset de paciencia con acciones < 3
+    def test_patience_reset_on_cooperative_opponent(self):
+        # Usar paciencia inicial 5 para distinguirlo del valor de reducción
+        initial_patience = 5
+        p = PermissiveTitForTat(self.game, initial_patience=initial_patience)
+        opponent = DummyOpponent(self.game)
+
+        # 1. Reducir la paciencia primero
+        opponent.history.append(4) # Paciencia: 5 -> 4
+        p.strategy(opponent)
+        opponent.history.append(3) # Paciencia: 4 -> 3
+        p.strategy(opponent)
+        self.assertEqual(p.patience, 3)
+        
+        # 2. Oponente elige 2 (< 3) -> paciencia debe resetearse a 5
+        opponent.history.append(2)
+        p.strategy(opponent)
+        self.assertEqual(p.patience, initial_patience)
+        
+        # 3. Oponente elige 1 (< 3) -> paciencia se mantiene en 5
+        opponent.history.append(1)
+        p.strategy(opponent)
+        self.assertEqual(p.patience, initial_patience)
+
+    # Test 6: Comprueba que la paciencia no baja de 0 (paciencia mínima)
+    def test_patience_does_not_go_below_zero(self):
+        initial_patience = 1
+        p = PermissiveTitForTat(self.game, initial_patience=initial_patience)
+        opponent = DummyOpponent(self.game)
+        
+        # Turno 1: Oponente elige 4 (>= 3) -> paciencia 1 -> 0
+        opponent.history.append(4)
+        p.strategy(opponent)
+        self.assertEqual(p.patience, 0)
+        
+        # Turno 2: Oponente elige 5 (>= 3) -> paciencia 0. max(0, 0-1) = 0
+        opponent.history.append(5)
+        p.strategy(opponent)
+        self.assertEqual(p.patience, 0)
+        
+        # La acción devuelta sigue siendo 5 (Tit-for-Tat)
+        self.assertEqual(p.strategy(opponent), 5)
 
 if __name__ == "__main__":
     unittest.main()

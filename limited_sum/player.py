@@ -395,3 +395,68 @@ class Deterministic_simpletron(Player):
         else:
             # Comportamiento basico: devolver nuestra ultima opcion opcion sea cual sea
             return self.history[-1]
+
+
+class PermissiveTitForTat(Player):
+    """
+    Estrategia Tit-for-Tat permisiva con un atributo de 'paciencia'.
+    La paciencia se reduce si el oponente elige una acción >= 3 y se resetea
+    si elige una acción < 3.
+    """
+
+    INITIAL_ACTION = 3 # JEJE somos malos
+    COOPERATIVE_ACTION = 2
+    
+    # Define la paciencia inicial o máxima
+    INITIAL_PATIENCE = 3  
+
+    def __init__(self, game: Game, name: str = "Permissive Tit for Tat", initial_patience: int = 3):
+        """
+        Inicializa el jugador PermissiveTitForTat.
+
+        :param game: El juego que se está jugando.
+        :type game: Game
+        :param name: Nombre opcional de la estrategia.
+        :type name: str
+        :param initial_patience: El valor inicial del atributo de paciencia.
+        :type initial_patience: int
+        """
+        super(PermissiveTitForTat, self).__init__(game, name)
+        # Atributo para controlar la paciencia.
+        self.patience = initial_patience 
+        self.INITIAL_PATIENCE = initial_patience
+
+    def strategy(self, opponent: Player) -> int:
+        """
+        Implementa la lógica de la estrategia:
+        1. Responde a la última acción del oponente (como Tit for Tat).
+        2. Ajusta la paciencia según la última acción del oponente.
+
+        :param opponent: El jugador oponente.
+        :type opponent: Player
+        :return: La acción elegida (0 a 5).
+        :rtype: int
+        """
+        if not opponent.history:
+            # Si no hay historia, comienza con la acción cooperativa
+            return self.INITIAL_ACTION
+
+        last_opponent_action = opponent.history[-1]
+        
+        # --- Lógica de ajuste de la paciencia ---
+        
+        if last_opponent_action >= 3:
+            # Si el oponente es 'codicioso' (elige 3 o más), reduce la paciencia
+            self.patience = max(0, self.patience - 1)
+        elif last_opponent_action < 3:
+            # Si el oponente elige algo menor a 3, resetea la paciencia
+            self.patience = self.INITIAL_PATIENCE
+            
+        # --- Lógica de la acción ---
+        
+        # Elige la acción en función de la última acción del oponente si la paciencia es 0
+        # (comportamiento base de Tit-for-Tat)
+        if self.patience == 0:
+            return last_opponent_action
+        else:
+            return self.COOPERATIVE_ACTION
