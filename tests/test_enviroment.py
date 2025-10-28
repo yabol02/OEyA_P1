@@ -41,6 +41,29 @@ class TestMatch(unittest.TestCase):
         self.assertEqual(match.score, (0.0, 0.0))
         self.assertEqual(self.p1.history, [])
         self.assertEqual(self.p2.history, [])
+    def test_probabilistic_play_heuristic(self):
+        """
+        Verifica que el juego probabilístico juegue un número indeterminado 
+        de rondas mayor que 0.
+        """
+        # 1. Ejecutar la partida (con una probabilidad de continuar alta, ej. 99%)
+        match = Match(self.p1, self.p2, n_rounds=0.01, error=0.0)
+        match.play(do_print=False)
+        
+        # 2. Aserciones:
+        
+        # El juego debe haber jugado al menos 1 ronda
+        self.assertGreater(len(self.p1.history), 0, "Debe jugar al menos 1 ronda.")
+        self.assertGreater(len(self.p2.history), 0, "Debe jugar al menos 1 ronda.")
+        
+        # Opcional: Establecer un límite superior razonable para evitar tests infinitos
+        MAX_ROUNDS_EXPECTED = 500 
+        self.assertLess(len(self.p1.history), MAX_ROUNDS_EXPECTED, "El juego debe terminar.")
+        
+        # La lógica de las acciones y puntuación debe seguir siendo correcta para N rondas
+        N = len(self.p1.history)
+        self.assertTrue(all(a == 0 for a in self.p1.history))
+        self.assertEqual(match.score, (0.0, 0.0))
 
     def test_play_no_error(self):
         """Ambos jugadores juegan siempre 0, sin error."""

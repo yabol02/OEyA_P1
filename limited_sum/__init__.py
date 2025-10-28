@@ -22,6 +22,8 @@ from .player import (
     Focal5,
     TitForTat,
     CastigadorInfernal,
+    Deterministic_simpletron,
+    PermissiveTitForTat,
 )
 from .match import Match
 from .tournament import Tournament
@@ -36,6 +38,8 @@ __all__ = [
     "Focal5",
     "TitForTat",
     "CastigadorInfernal",
+    "Deterministic_simpletron",
+    "PermissiveTitForTat",
     "Match",
     "Tournament",
     "Evolution",

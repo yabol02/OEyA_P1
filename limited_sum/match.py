@@ -18,17 +18,22 @@ class Match:
         :type player_1: Player
         :param player_2: Second player of the match.
         :type player_2: Player
-        :param n_rounds: Number of rounds in the match.
+        :param n_rounds: Number of rounds in the match. Si es 0 lanza error. Si es < 1, será una probabilidad de terminar. Si es >= 1, será el numero exacto de rondas
         :type n_rounds: int
         :param error: Probability of making an error, expressed on a 0–1 scale.
         :type error: float
         """
         assert n_rounds > 0, "'n_rounds' should be greater than 0"
 
-        self._continue_playing_prob = 0.01
+        if n_rounds < 1:
+            self._continue_playing_prob = n_rounds
+            self._playing_with_prob = True
+        else:
+            self.n_rounds = n_rounds
+            self._playing_with_prob = False
+        self._round_counter = 0
         self.player_1 = player_1
         self.player_2 = player_2
-        self.n_rounds = n_rounds
         self.error = error
 
         self.player_1.clean_history()
@@ -52,8 +57,10 @@ class Match:
         :rtype: None
         """
         score_p1, score_p2 = 0, 0
+        do_cotinue_playing = True
 
-        while random() > self._continue_playing_prob:
+        while do_cotinue_playing:
+
             a_p1 = self.player_1.strategy(self.player_2)
             a_p2 = self.player_2.strategy(self.player_2)
             a_p1 = a_p1 if random() > self.error else ACTIONS[max(ACTIONS) - a_p1]
@@ -68,19 +75,24 @@ class Match:
             score_p2 += payoff_p2
             if do_print:
                 print(
-                    f"ROUND {self.n_rounds+1:03d} | P1 Action: {a_p1}, P2 Action: {a_p2} \
+                    f"ROUND {self._round_counter+1:03d} | P1 Action: {a_p1}, P2 Action: {a_p2} \
                         | P1 Payoff: {payoff_p1}, P2 Payoff: {payoff_p2} \
                         | Total Score: ({score_p1:.1f}, {score_p2:.1f})"
                 )
-            self.n_rounds -= -1
+            self._round_counter -= -1
 
-        score_p1 /= self.n_rounds
-        score_p2 /= self.n_rounds
+            if self._playing_with_prob:
+                do_cotinue_playing = random() < self._continue_playing_prob
+            else:
+                do_cotinue_playing = (self.n_rounds != self._round_counter)
+
+        score_p1 /= self._round_counter
+        score_p2 /= self._round_counter
         self.score = (score_p1, score_p2)
         final_score_p1, final_score_p2 = [
             x
             for x in map(
-                lambda v: v / self.n_rounds, self.player_1.compute_scores(self.player_2)
+                lambda v: v / self._round_counter, self.player_1.compute_scores(self.player_2)
             )
         ]
 
@@ -95,4 +107,3 @@ class Match:
                 f"MATCH ENDED. FINAL SCORE: P1 ({self.player_1.name}): {self.score[0]:.1f} | P2 ({self.player_2.name}): {self.score[1]:.1f}"
             )
 
-        self.n_rounds = 0
