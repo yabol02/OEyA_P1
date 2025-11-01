@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from random import choice
+from random import choice, random
 from typing import Self
 from .game import Game
 
@@ -460,3 +460,339 @@ class PermissiveTitForTat(Player):
             return last_opponent_action
         else:
             return self.COOPERATIVE_ACTION
+        
+class GrimTrigger(Player):
+    COOPERATIVE_ACTION = 2
+    PUNISHMENT_ACTION = 3 # La deserción más leve
+    
+    def __init__(self, game: Game, name: str = "Grim Trigger"):
+        super(GrimTrigger, self).__init__(game, name)
+        self.triggered = False # Estado de castigo
+
+    def strategy(self, opponent: Player) -> int:
+        # Si ya estamos en modo castigo, castigar para siempre.
+        if self.triggered:
+            return self.PUNISHMENT_ACTION
+
+        # Revisar el historial del oponente por cualquier deserción pasada
+        if not opponent.history:
+            return self.COOPERATIVE_ACTION # Cooperar en la primera ronda
+
+        # Si el oponente desertó en la última ronda (o cualquier ronda anterior)
+        # Nota: una versión más estricta revisaría todo el 'opponent.history'
+        if opponent.history[-1] > self.COOPERATIVE_ACTION:
+            self.triggered = True
+            return self.PUNISHMENT_ACTION
+        
+        # Si no hay traición, seguir cooperando
+        return self.COOPERATIVE_ACTION
+    
+class GenerousTitForTat(Player):
+    """
+    Estrategia Tit-for-Tat Generoso (GTFT).
+
+    Sigue la lógica de TFT (cooperar si el oponente cooperó, castigar si desertó),
+    pero con una probabilidad 'prob_generosidad', perdona una deserción
+    del oponente y coopera de todos modos.
+
+    Esto es crucial para romper ciclos de castigo mutuo iniciados por un error (ruido).
+    """
+
+    def __init__(self, game: 'Game', name: str = "Generous TFT",
+                 accion_cooperativa: int = 2,
+                 accion_castigo: int = 3,
+                 prob_generosidad: float = 0.1):
+        """
+        Constructor configurable.
+
+        :param accion_cooperativa: La acción a tomar para cooperar (default: 2).
+        :param accion_castigo: La acción a tomar para castigar (default: 3).
+        :param prob_generosidad: Probabilidad (0.0 a 1.0) de perdonar una deserción.
+                                 Un valor común en estudios es 1/3 o 0.1.
+        """
+        super(GenerousTitForTat, self).__init__(game, name)
+        self.COOPERATIVE_ACTION = accion_cooperativa
+        self.PUNISHMENT_ACTION = accion_castigo
+        self.GENEROSITY_PROB = prob_generosidad
+
+    def strategy(self, opponent: Player) -> int:
+        # Cooperar en la primera ronda
+        if not opponent.history:
+            return self.COOPERATIVE_ACTION
+
+        last_opponent_action = opponent.history[-1]
+
+        # 1. Si el oponente cooperó, nosotros cooperamos
+        if last_opponent_action <= self.COOPERATIVE_ACTION:
+            return self.COOPERATIVE_ACTION
+        
+        # 2. Si el oponente desertó...
+        else:
+            # 3. Decidir si ser generoso (perdonar)
+            if random() < self.GENEROSITY_PROB:
+                # Perdón: Romper el ciclo cooperando
+                return self.COOPERATIVE_ACTION
+            else:
+                # Castigo: Seguir la regla de TFT
+                return self.PUNISHMENT_ACTION
+
+# --- Otros Modelos Robustos Configurables ---
+
+class ContriteTitForTat(Player):
+    """
+    Tit-for-Tat Arrepentido (o "Estratega Arrepentido").
+
+    Esta estrategia se enfoca en el *otro* lado del ruido: ¿Qué pasa si *yo*
+    causé el problema?
+    
+    Su lógica es:
+    1. Si la última ronda fue un éxito (Pago > 0), jugar como TFT.
+    2. Si la última ronda fue un fracaso (Pago = 0), asumir la culpa (arrepentirse)
+       y cooperar, esperando que esto rompa el ciclo de castigo.
+    """
+    
+    def __init__(self, game: 'Game', name: str = "Contrite TFT",
+                 accion_cooperativa: int = 2,
+                 accion_castigo: int = 3):
+        
+        super(ContriteTitForTat, self).__init__(game, name)
+        self.COOPERATIVE_ACTION = accion_cooperativa
+        self.PUNISHMENT_ACTION = accion_castigo
+
+    def strategy(self, opponent: Player) -> int:
+        # Cooperar en la primera ronda
+        if not self.history:
+            return self.COOPERATIVE_ACTION
+
+        my_last_payoff = self.payoff_history[-1]
+
+        # 1. Arrepentimiento: Si el resultado fue 0, cooperar para arreglarlo.
+        if my_last_payoff == 0:
+            return self.COOPERATIVE_ACTION
+        
+        # 2. Éxito: Si el pago fue > 0, jugar como TFT estándar.
+        else:
+            last_opponent_action = opponent.history[-1]
+            if last_opponent_action > self.COOPERATIVE_ACTION:
+                return self.PUNISHMENT_ACTION
+            else:
+                return self.COOPERATIVE_ACTION
+
+class AdaptivePavlov(Player):
+    """
+    Estrategia Pavlov (Win-Stay, Lose-Shift) Adaptativa.
+
+    La estrategia "Pavlov" simple (vista en la respuesta anterior) alterna
+    entre dos acciones. Esta versión permite más flexibilidad en la
+    lógica "Lose-Shift" (Perder-Cambiar).
+    """
+
+    def __init__(self, game: 'Game', name: str = "Adaptive Pavlov",
+                 accion_cooperativa: int = 2,
+                 accion_desercion: int = 3,
+                 shift_strategy: str = 'toggle'):
+        """
+        :param accion_cooperativa: Acción base de cooperación (default: 2).
+        :param accion_desercion: Acción base de deserción (default: 3).
+        :param shift_strategy: Cómo "cambiar" al perder (Pago=0).
+                               'toggle': Alterna entre accion_cooperativa y accion_desercion.
+                               'random': Elige aleatoriamente entre las dos.
+                               'always_coop': Siempre cambia a accion_cooperativa.
+        """
+        super(AdaptivePavlov, self).__init__(game, name)
+        self.COOP_ACTION = accion_cooperativa
+        self.DEFECT_ACTION = accion_desercion
+        self.SHIFT_STRATEGY = shift_strategy
+
+    def strategy(self, opponent: Player) -> int:
+        if not self.history:
+            return self.COOP_ACTION
+
+        my_last_payoff = self.payoff_history[-1]
+        my_last_action = self.history[-1]
+
+        # 1. WIN-STAY (Ganar-Quedarse)
+        if my_last_payoff > 0:
+            return my_last_action
+        
+        # 2. LOSE-SHIFT (Perder-Cambiar)
+        else:
+            if self.SHIFT_STRATEGY == 'toggle':
+                return self.DEFECT_ACTION if my_last_action == self.COOP_ACTION else self.COOP_ACTION
+            
+            elif self.SHIFT_STRATEGY == 'random':
+                return choice([self.COOP_ACTION, self.DEFECT_ACTION])
+            
+            elif self.SHIFT_STRATEGY == 'always_coop':
+                return self.COOP_ACTION
+            
+            else: # Default a 'toggle'
+                return self.DEFECT_ACTION if my_last_action == self.COOP_ACTION else self.COOP_ACTION
+
+class Detective(Player):
+    """
+    Estrategia "Detective" (Sondeador) mejorada.
+
+    Capaz de clasificar oponentes como:
+    - ALWAYS_0, ALWAYS_3
+    - ALL_COOP (Always 2)
+    - ALL_DEFECT (Always 3 o más)
+    - TIT_FOR_TAT (Copia mi acción anterior)
+    - FOCAL_5 (Juega 5 - mi_accion_anterior)
+    - RANDOM (Muestra alta variabilidad)
+    - REACTIVE_GTFT (Similar a TFT, pero con posible perdón)
+    - UNKNOWN (Si no se ajusta a ningún patrón conocido)
+    """
+
+    def __init__(self, game: 'Game', name: str = "Detective Avanzado",
+                 accion_cooperativa: int = 2,
+                 accion_castigo: int = 3,
+                 secuencia_sondeo: List[int] = [2, 3, 0, 5],
+                 fallback_strategy: str = 'TFT'):
+        
+        super(Detective, self).__init__(game, name)
+        self.COOP_ACTION = accion_cooperativa
+        self.PUNISH_ACTION = accion_castigo
+        self.PROBE_SEQUENCE = secuencia_sondeo
+        self.FALLBACK_STRATEGY = fallback_strategy
+        
+        self.probe_len = len(self.PROBE_SEQUENCE)
+        self.analysis_done = False
+        self.opponent_type = 'UNKNOWN'
+
+    def _analyze_opponent(self, opponent: Player):
+        """Método interno para clasificar al oponente después del sondeo."""
+        self.analysis_done = True
+        op_history = opponent.history[:self.probe_len]
+        my_probes = self.PROBE_SEQUENCE
+
+        # La acción inicial del Detective debe ser considerada como la acción
+        # a la que reacciona el oponente en la ronda 1.
+        # En este caso, mi acción en la ronda n reacciona a la acción del oponente en n-1.
+        # Por simplicidad, consideraremos la secuencia de acciones del oponente.
+        
+        # --- 1. Clasificación de Estrategias Fijas (Siempre Juega X) ---
+        if all(v == 0 for v in op_history):
+            self.opponent_type = 'ALWAYS_0'
+            return
+        if all(v == self.PUNISH_ACTION for v in op_history):
+            self.opponent_type = 'ALWAYS_3'
+            return
+        if all(v == 2 for v in op_history):
+            self.opponent_type = 'ALL_COOP' # Podría ser TFT si la secuencia empieza con 2
+            return
+        if all(v == 5 for v in op_history):
+            self.opponent_type = 'ALWAYS_5'
+            return
+        
+        # --- 2. Clasificación de Estrategias Reactivas ---
+        
+        # Tit For Tat (TFT) o PermissiveTFT (si la paciencia se agota pronto)
+        # Reacción esperada: la acción del oponente en n es igual a mi acción en n-1.
+        # Asumiendo que yo empiezo con PROBE_SEQUENCE[0] y el oponente reacciona a mi 
+        # acción previa (o coopera inicialmente si es TFT).
+        # Sequencia de oponente TFT: [2 (coop inicial), 2, 3, 0, ...]
+        expected_tft_response = [self.COOP_ACTION] + my_probes[:-1]
+        
+        # Nota: Usaremos sólo las primeras `probe_len - 1` rondas para la comparación
+        # o asumimos una acción inicial de cooperación para el oponente.
+        if op_history[1:] == my_probes[:-1]: # El oponente copió todas mis acciones menos la primera
+             self.opponent_type = 'TIT_FOR_TAT'
+             return
+             
+        # Focal 5 (Coordina en suma 5: 5 - mi_accion)
+        # Mi acción: [a0, a1, a2, a3]
+        # Su acción (Focal 5): [5-a0, 5-a1, 5-a2, 5-a3]
+        # Usamos la acción del oponente en n para ver si intentó sumar 5 con mi acción en n-1.
+        # Es más simple ver si op[i] + mi[i] = 5
+        focal_5 = True
+        for i in range(self.probe_len - 1):
+            # Comprueba si op[i+1] (su jugada en R2, R3, R4) 
+            # + mi[i] (mi jugada en R1, R2, R3) == 5
+                
+            if op_history[i+1] + my_probes[i] != self.game.threshold: 
+                focal_5 = False
+                break
+        if focal_5:
+            self.opponent_type = "FOCAL_5"
+            return
+            
+        # --- 3. Clasificación de Estrategias de Patrón ---
+        
+        # Uniform Random
+        # La varianza de las acciones será alta. Si la desviación estándar es > 1.5,
+        # es un buen indicador de aleatoriedad.
+        avg_op = sum(op_history) / self.probe_len
+        variance = sum([(x - avg_op) ** 2 for x in op_history]) / self.probe_len
+        if variance > 1.5 and len(set(op_history)) > 2:
+            self.opponent_type = 'RANDOM'
+            return
+            
+        # Grim Trigger / Castigador Infernal / Deterministic Simpletron (Modo Castigo)
+        # Si el oponente juega inicialmente con 2 y luego siempre juega 3 después de mi deserción (mi acción 3)
+        # Es difícil diferenciar sin más rondas o sin una historia de pagos.
+        # Nos enfocamos en la deserción permanente.
+        if op_history[0] == 2 and op_history[1] == 3 and all(v == 3 for v in op_history[2:]):
+             self.opponent_type = 'GRIM_TRIGGER_LIKE'
+             return
+        
+        # Si no se ajusta a ningún patrón, se queda como 'UNKNOWN'.
+
+    def strategy(self, opponent: Player) -> int:
+        round_num = len(self.history)
+
+        # Fase 1: Sondeo
+        if round_num < self.probe_len:
+            return self.PROBE_SEQUENCE[round_num]
+
+        # Fase 2: Análisis (solo se ejecuta una vez)
+        if not self.analysis_done:
+            # Asumo que self.game.threshold existe (usualmente 5 en este contexto)
+            self._analyze_opponent(opponent)
+
+        # Fase 3: Estrategia post-análisis
+        
+        last_opponent_action = opponent.history[-1]
+        
+        if self.opponent_type == 'ALWAYS_0':
+            # Jugar 5 para obtener el máximo beneficio (5 + 0 = 5)
+            return self.game.threshold 
+        
+        elif self.opponent_type == 'ALWAYS_3' or self.opponent_type == 'GRIM_TRIGGER_LIKE':
+            # Ellos siempre jugarán 3. Jugar  3 o + resulta en Pago=0. 
+            # No queremos recompensar esta estrategia ni queremos ganar 0
+            # asi que jugamos aleatoriamente entre 2 y 3
+            return choice([self.COOP_ACTION, self.PUNISH_ACTION])
+
+        elif self.opponent_type == 'ALL_COOP' or self.opponent_type == 'ALWAYS_2':
+            # Explotar: jugar 3 para obtener (3 + 2 = 5), Pago = 3. 
+            return self.PUNISH_ACTION
+            
+        elif self.opponent_type == 'ALWAYS_5':
+            # Ellos juegan 5, yo juego 0 (5+0=5), Pago=0. No hay beneficio.
+            return self.PUNISH_ACTION
+
+        elif self.opponent_type == 'TIT_FOR_TAT':
+            # Jugar TFT contra TFT (es la mejor respuesta para la cooperación mutua)
+            # Replicar su última acción.
+            return last_opponent_action
+
+        elif self.opponent_type == 'FOCAL_5':
+            # Mantener la coordinación óptima.
+            desired_action = self.game.threshold - last_opponent_action
+            return max(0, min(self.game.threshold, desired_action))
+            
+        elif self.opponent_type == 'RANDOM':
+            # Adoptar una estrategia robusta y segura, como la cooperación.
+            return self.COOP_ACTION
+
+        # --- Estrategia de Retorno (Fallback) ---
+        else: 
+            # UNKNOWN o patrones difíciles (e.g., Castigador Infernal, GTFT)
+            # Volver a una estrategia robusta preconfigurada (TFT o GTFT)
+            if self.FALLBACK_STRATEGY == 'TFT':
+                 # TFT simple
+                 return last_opponent_action
+            else:
+                 # Por defecto, cooperar
+                 return self.COOP_ACTION

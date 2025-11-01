@@ -344,6 +344,357 @@ class TestPermissiveTitForTat(unittest.TestCase):
         
         # La acción devuelta sigue siendo 5 (Tit-for-Tat)
         self.assertEqual(p.strategy(opponent), 5)
+# ====================================================================
+# TESTS UNITARIOS PARA GRIMTRIGGER
+# ====================================================================
+
+class TestGrimTrigger(unittest.TestCase):
+    def setUp(self):
+        self.game = DummyGame()
+        self.COOP = 2
+        self.DEFECT = 3
+
+    # Test 1: Comprueba cooperación inicial y estado
+    def test_initial_cooperation(self):
+        gt = GrimTrigger(self.game)
+        opponent = DummyOpponent(self.game)
+        self.assertEqual(gt.strategy(opponent), self.COOP)
+        self.assertFalse(gt.triggered)
+
+    # Test 2: Mantiene la cooperación si el oponente coopera
+    def test_maintain_cooperation(self):
+        gt = GrimTrigger(self.game)
+        opponent = DummyOpponent(self.game)
+        opponent.history = [self.COOP, 1]
+        self.assertEqual(gt.strategy(opponent), self.COOP)
+        self.assertFalse(gt.triggered)
+
+    # Test 3: Se activa el castigo al detectar la deserción (acción 3)
+    def test_trigger_on_defection_3(self):
+        gt = GrimTrigger(self.game)
+        opponent = DummyOpponent(self.game) # Defección en la R2
+        opponent.history.extend([self.COOP, self.DEFECT])
+        gt.history.append(self.COOP) # Simular mi acción previa
+        self.assertEqual(gt.strategy(opponent), self.DEFECT)
+        self.assertTrue(gt.triggered)
+
+    # Test 4: El castigo es permanente (mantiene 3 incluso si el oponente coopera)
+    def test_permanent_punishment(self):
+        gt = GrimTrigger(self.game)
+        gt.triggered = True # Estado de castigo ya activo
+        
+        # Oponente coopera (acción 2) en la última ronda, pero el estado es permanente.
+        opponent = DummyOpponent(self.game)
+        opponent.history.extend([self.DEFECT, self.COOP])
+        self.assertEqual(gt.strategy(opponent), self.DEFECT)
+        self.assertTrue(gt.triggered)
+
+
+# ====================================================================
+# TESTS UNITARIOS PARA GENEROUSTITFORTAT
+# ====================================================================
+
+class TestGenerousTitForTat(unittest.TestCase):
+    def setUp(self):
+        self.game = DummyGame()
+        self.COOP = 2
+        self.DEFECT = 3
+
+    # Test 1: Comprueba cooperación inicial
+    def test_initial_cooperation(self):
+        gtft = GenerousTitForTat(self.game)
+        opponent = DummyOpponent(self.game)
+        self.assertEqual(gtft.strategy(opponent), self.COOP)
+
+    # Test 2: Sigue a TFT cuando el oponente coopera
+    def test_follows_tft_on_cooperation(self):
+        gtft = GenerousTitForTat(self.game)
+        opponent = DummyOpponent(self.game)
+        opponent.history=[self.COOP]
+        self.assertEqual(gtft.strategy(opponent), self.COOP)
+
+    # Test 3: Castiga (comportamiento TFT) si la generosidad es 0.0
+    def test_punishes_if_not_generous(self):
+        # Generosidad 0.0 -> siempre castiga ante deserción (4 > 2)
+        gtft = GenerousTitForTat(self.game, prob_generosidad=0.0)
+        opponent = DummyOpponent(self.game)
+        opponent.history=[4] 
+        self.assertEqual(gtft.strategy(opponent), self.DEFECT)
+
+    # Test 4: Perdona (comportamiento generoso) si la generosidad es 1.0
+    def test_always_forgives_if_fully_generous(self):
+        # Generosidad 1.0 -> siempre coopera ante deserción (4 > 2)
+        gtft = GenerousTitForTat(self.game, prob_generosidad=1.0)
+        opponent = DummyOpponent(self.game)
+        opponent.history=[4]
+        self.assertEqual(gtft.strategy(opponent), self.COOP)
+
+    # Test 5: Comprueba la configuración de acciones personalizadas
+    def test_configurable_actions(self):
+        # Coop=1, Punish=4. Generosidad=0.0 (para probar castigo)
+        gtft = GenerousTitForTat(self.game, accion_cooperativa=1, accion_castigo=4, prob_generosidad=0.0)
+        
+        # Acción inicial (debe ser 1)
+        self.assertEqual(gtft.strategy(DummyOpponent(self.game)), 1) 
+        
+        # Castigo ante deserción del oponente (3 > 1) (debe ser 4)
+        opponent = DummyOpponent(self.game)
+        opponent.history=[3] 
+        self.assertEqual(gtft.strategy(opponent), 4)
+
+
+# ====================================================================
+# TESTS UNITARIOS PARA CONTRITETITFORTAT
+# ====================================================================
+
+class TestContriteTitForTat(unittest.TestCase):
+    def setUp(self):
+        self.game = DummyGame()
+        self.COOP = 2
+        self.DEFECT = 3
+
+    # Test 1: Comprueba cooperación inicial
+    def test_initial_cooperation(self):
+        ctft = ContriteTitForTat(self.game)
+        opponent = DummyOpponent(self.game)
+        self.assertEqual(ctft.strategy(opponent), self.COOP)
+
+    # Test 2: Juega TFT después de una ronda exitosa (Pago > 0)
+    def test_plays_tft_on_success(self):
+        ctft = ContriteTitForTat(self.game)
+        ctft.history = [self.COOP]
+        ctft.payoff_history = [3] # Éxito
+        
+        # El oponente deserta (acción 4 > 2). CTFT juega TFT -> castiga (3).
+        opponent = DummyOpponent(self.game)
+        opponent.history=[4]
+        self.assertEqual(ctft.strategy(opponent), self.DEFECT)
+
+    # Test 3: Se arrepiente (Coopera) después de una ronda fallida (Pago = 0)
+    def test_repents_on_failure(self):
+        ctft = ContriteTitForTat(self.game)
+        ctft.history = [self.DEFECT]
+        ctft.payoff_history = [0] # Fracaso
+        
+        # El oponente deserta (acción 4). CTFT se arrepiente -> coopera (2).
+        opponent = DummyOpponent(self.game)
+        opponent.history=[4]
+        self.assertEqual(ctft.strategy(opponent), self.COOP)
+        
+    # Test 4: Se arrepiente incluso si el oponente cooperó (Pago = 0)
+    def test_repents_even_if_opponent_cooperated(self):
+        # Pago=0 ocurre en (3,3), (4,1), (5,0). 
+        # Simular (3,3) donde yo jugué 3 y el oponente 3, y mi pago fue 0.
+        ctft = ContriteTitForTat(self.game)
+        ctft.history = [self.DEFECT]
+        ctft.payoff_history = [0] # Fracaso
+        
+        opponent = DummyOpponent(self.game) # Oponente juega 3
+        opponent.history=[self.DEFECT]
+        self.assertEqual(ctft.strategy(opponent), self.COOP) # Debe arrepentirse (2)
+
+
+# ====================================================================
+# TESTS UNITARIOS PARA ADAPTIVEPAVLOV
+# ====================================================================
+
+class TestAdaptivePavlov(unittest.TestCase):
+    def setUp(self):
+        self.game = DummyGame()
+        self.COOP = 2
+        self.DEFECT = 3
+
+    # Test 1: Comprueba cooperación inicial
+    def test_initial_cooperation(self):
+        ap = AdaptivePavlov(self.game)
+        opponent = DummyOpponent(self.game)
+        self.assertEqual(ap.strategy(opponent), self.COOP)
+
+    # Test 2: Win-Stay (mantiene acción) después de éxito (Pago > 0)
+    def test_win_stay(self):
+        ap = AdaptivePavlov(self.game)
+        ap.history = [self.DEFECT] # Mi última acción
+        ap.payoff_history = [3] # Éxito
+        
+        opponent = DummyOpponent(self.game) 
+        self.assertEqual(ap.strategy(opponent), self.DEFECT) # Debe repetir 3
+
+    # Test 3: Lose-Shift ('toggle', COOP -> DEFECT)
+    def test_lose_shift_toggle_coop_to_defect(self):
+        ap = AdaptivePavlov(self.game, shift_strategy='toggle')
+        ap.history = [self.COOP] # Mi última acción fue 2
+        ap.payoff_history = [0] # Fracaso
+        
+        opponent = DummyOpponent(self.game) 
+        self.assertEqual(ap.strategy(opponent), self.DEFECT) # Debe cambiar a 3
+
+    # Test 4: Lose-Shift ('toggle', DEFECT -> COOP)
+    def test_lose_shift_toggle_defect_to_coop(self):
+        ap = AdaptivePavlov(self.game, shift_strategy='toggle')
+        ap.history = [self.DEFECT] # Mi última acción fue 3
+        ap.payoff_history = [0] # Fracaso
+        
+        opponent = DummyOpponent(self.game) 
+        self.assertEqual(ap.strategy(opponent), self.COOP) # Debe cambiar a 2
+
+    # Test 5: Lose-Shift ('always_coop') - Siempre coopera después de fracaso
+    def test_lose_shift_always_coop(self):
+        ap = AdaptivePavlov(self.game, shift_strategy='always_coop')
+        ap.history = [self.DEFECT] # Mi última acción fue 3
+        ap.payoff_history = [0] # Fracaso
+        
+        opponent = DummyOpponent(self.game) 
+        self.assertEqual(ap.strategy(opponent), self.COOP) # Debe cambiar a 2
+
+# ====================================================================
+# TESTS UNITARIOS PARA DETECTIVE AVANZADO
+# ====================================================================
+
+class TestDetective(unittest.TestCase):
+    def setUp(self):
+        self.game = DummyGame(threshold=5)
+        self.PROBE_SEQ = [2, 3, 0, 5]
+        self.PROBE_LEN = 4
+        self.COOP = 2
+        self.DEFECT = 3
+
+    # Test 1: Juega la secuencia de sondeo
+    def test_plays_probe_sequence(self):
+        det = Detective(self.game)
+        opponent = DummyOpponent(self.game)
+        for i in range(self.PROBE_LEN):
+            action = det.strategy(opponent)
+            self.assertEqual(action, self.PROBE_SEQ[i])
+            det.history.append(action)
+            opponent.history.append(0) 
+
+    # Test 2: Clasifica Tit For Tat (TFT) y adopta mejor respuesta
+    def test_classifies_tft_and_responds(self):
+        det = Detective(self.game)
+        # Mi probe: [2, 3, 0, 5]. Op TFT: [2 (inicial), 2, 3, 0, 5]
+        opponent_history = [self.COOP] + self.PROBE_SEQ[:-1] 
+        opponent = DummyOpponent(self.game) # Op juega 2 en R5
+        opponent.history = opponent_history + [2]
+        
+        # Ejecutar fase de sondeo
+        for i in range(self.PROBE_LEN + 1):
+            det.history.append(det.strategy(opponent))
+            
+        # R5: Fase post-análisis
+        self.assertEqual(det.opponent_type, 'TIT_FOR_TAT')
+        # La mejor respuesta es TFT (copia la última acción del oponente: 2)
+        self.assertEqual(det.strategy(opponent), 2) 
+
+    # Test 3: Clasifica Focal 5 y adopta mejor respuesta (coordinación)
+    def test_classifies_focal_5_and_responds(self):
+        det = Detective(self.game)
+        # Mi probe: [2, 3, 0, 5]. Op Focal 5: [3, 3, 2, 5]
+        opponent_history = [3, 3, 2, 5]
+        opponent = DummyOpponent(self.game) # Op juega 1 en R5
+        opponent.history=opponent_history + [0]
+        
+        # Ejecutar fase de sondeo
+        for i in range(self.PROBE_LEN+1):
+            det.history.append(det.strategy(opponent))
+        # R5: Fase post-análisis
+        self.assertEqual(det.opponent_type, 'FOCAL_5')
+        # La mejor respuesta es 5 - 0 = 5
+        self.assertEqual(det.strategy(opponent), 5) 
+
+    # Test 4: Clasifica Always 3 y explota (juega 3)
+    def test_classifies_always_3_and_responds(self):
+        det = Detective(self.game)
+        opponent_history = [3] * self.PROBE_LEN 
+        opponent = DummyOpponent(self.game) # Op sigue en 3
+        opponent.history=opponent_history + [self.DEFECT]
+        
+        # Ejecutar fase de sondeo
+        for i in range(self.PROBE_LEN + 1):
+            det.history.append(det.strategy(opponent))
+            
+        # R5: Fase post-análisis
+        self.assertEqual(det.opponent_type, 'ALWAYS_3')
+        # La mejor respuesta es 3 (PUNISH_ACTION) para el caso de suma > 5
+        self.assertIn(det.strategy(opponent), [2,3])
+
+# ====================================================================
+# TESTS UNITARIOS PARA FOCAL 5
+# ====================================================================
+
+
+class TestFocal5(unittest.TestCase):
+    
+    def setUp(self):
+        """Configura el entorno para cada test."""
+        # Es crucial que el DummyGame se inicialice con threshold=5
+        self.game = DummyGame(threshold=5)
+        self.player = Focal5(self.game)
+        self.opponent = DummyOpponent(self.game)
+
+    # Test 1: Comprueba la acción inicial (Ronda 1)
+    def test_initial_action(self):
+        """
+        Prueba que la primera acción (sin historial del oponente) 
+        es COORDINATION_ACTION (3).
+        """
+        # Verificamos que el historial está vacío
+        self.assertEqual(self.opponent.history, [])
+        # Comprobamos la acción
+        self.assertEqual(self.player.strategy(self.opponent), self.player.COORDINATION_ACTION)
+
+    # Test 2: Adaptación estándar (Oponente juega 2)
+    def test_adaptation_opponent_plays_2(self):
+        """
+        Prueba que si el oponente jugó 2, el jugador responde 3.
+        (Target: 5 - 2 = 3)
+        """
+        self.opponent.history = [2] # Última jugada del oponente
+        self.assertEqual(self.player.strategy(self.opponent), 3)
+
+    # Test 3: Adaptación al límite superior (Oponente juega 0)
+    def test_adaptation_opponent_plays_0(self):
+        """
+        Prueba que si el oponente jugó 0, el jugador responde 5.
+        (Target: 5 - 0 = 5)
+        """
+        self.opponent.history = [0]
+        self.assertEqual(self.player.strategy(self.opponent), 5)
+
+    # Test 4: Adaptación al límite inferior (Oponente juega 5)
+    def test_adaptation_opponent_plays_5(self):
+        """
+        Prueba que si el oponente jugó 5, el jugador responde 0.
+        (Target: 5 - 5 = 0)
+        """
+        self.opponent.history = [5]
+        self.assertEqual(self.player.strategy(self.opponent), 0)
+
+    # Test 5: Adaptación (Oponente juega 4)
+    def test_adaptation_opponent_plays_4(self):
+        """
+        Prueba que si el oponente jugó 4, el jugador responde 1.
+        (Target: 5 - 4 = 1)
+        """
+        self.opponent.history = [4]
+        self.assertEqual(self.player.strategy(self.opponent), 1)
+
+    # Test 6: Clipping (Recorte a 0 si el oponente juega > 5)
+    def test_clipping_low(self):
+        """
+        Prueba que la acción se recorta a 0 si el oponente juega un número alto.
+        (Target: 5 - 10 = -5, Clipped: 0)
+        """
+        self.opponent.history = [10] # Jugada alta (fuera de rango)
+        self.assertEqual(self.player.strategy(self.opponent), 0)
+
+    # Test 7: Clipping (Recorte a 5 si el oponente juega < 0)
+    def test_clipping_high(self):
+        """
+        Prueba que la acción se recorta a 5 si el oponente juega un número negativo.
+        (Target: 5 - (-2) = 7, Clipped: 5)
+        """
+        self.opponent.history = [-2] # Jugada baja (fuera de rango)
+        self.assertEqual(self.player.strategy(self.opponent), 5)
 
 if __name__ == "__main__":
     unittest.main()
