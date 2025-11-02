@@ -74,6 +74,40 @@ class Player(ABC):
         :rtype: None
         """
         self.history = []
+    def __repr__(self) -> str:
+        """
+        Genera una representación string del objeto Player, mostrando dinámicamente
+        todos los atributos, truncando listas largas a los primeros 5 elementos.
+        """
+        class_name = self.__class__.__name__
+        
+        # 1. Obtener todos los atributos de la instancia
+        attributes = vars(self) # Equivale a self.__dict__
+        
+        formatted_attrs = []
+        
+        # 2. Iterar sobre los atributos y formatear su valor
+        for key, value in attributes.items():
+            
+            # Excluir la instancia de 'game' para evitar recursión y hacer la salida más limpia
+            if key == 'game':
+                formatted_value = f"<Game object: {value.__class__.__name__}>"
+            
+            # Lógica para truncar listas, tuplas, o conjuntos largos
+            elif isinstance(value, (list, tuple, set)) and len(value) > 5:
+                # Mostrar los primeros 5 elementos y la longitud total
+                head = list(value)[:5]
+                # Usa '...' para indicar que hay más elementos
+                formatted_value = f"[{', '.join(map(repr, head))}, ... ({len(value)} total)]"
+            
+            # Manejo de listas/atributos pequeños o de otro tipo
+            else:
+                formatted_value = repr(value)
+            
+            formatted_attrs.append(f"{key}={formatted_value}")
+        
+        # 3. Construir la representación final
+        return f"<{class_name}({' '.join(formatted_attrs)})>"
 
 
 # ---------------------------------------------------------------------
@@ -335,7 +369,7 @@ class Deterministic_simpletron(Player):
         game: Game,
         name: str = "",
         pesimist_start: bool = False,
-        tic_for_tat_punishment: bool = False,
+        tit_for_tat_punishment: bool = False,
     ):
         """
         Inicializa un agente basado en la estrategia SIMPLETON determinista.
@@ -350,7 +384,7 @@ class Deterministic_simpletron(Player):
             Indica si el agente debe comenzar con una jugada 'greedy' (3) o 'amigable' (2):
             - False → comienza cooperando (valor 2).
             - True  → comienza siendo greedy (valor 3).
-        tic_for_tat_punishment : bool, opcional
+        tit_for_tat_punishment : bool, opcional
             Controla el tipo de castigo cuando el oponente es greedy (≥3):
             - False → castigo básico: siempre responde con 3.
             - True  → castigo tipo "tit-for-tat": replica la última acción del oponente.
@@ -366,7 +400,7 @@ class Deterministic_simpletron(Player):
 
         # Parámetros de configuración
         self.pesimist_start = pesimist_start
-        self.tic_for_tat_punishmnet = tic_for_tat_punishment
+        self.tit_for_tat_punishmnet = tit_for_tat_punishment
 
         # Bandera interna para saber si el agente está en modo "castigo"
         # (True = aplicar castigo; False = comportamiento normal)
@@ -388,7 +422,7 @@ class Deterministic_simpletron(Player):
 
         if self.do_punish:
             # Vamos punishear
-            if self.tic_for_tat_punishmnet:
+            if self.tit_for_tat_punishmnet:
                 return last_opponent_action
             else:
                 return 3  # Basico

@@ -14,6 +14,7 @@ This package provides the following main components:
 """
 
 from .game import Game, ACTIONS, THRESHOLD
+from .player_builder import create_agent, AGENT_CLASSES, build_several_agents
 from .player import (
     Player,
     Always0,
@@ -24,6 +25,9 @@ from .player import (
     CastigadorInfernal,
     Deterministic_simpletron,
     PermissiveTitForTat,
+    Detective, AdaptivePavlov,
+    ContriteTitForTat, GenerousTitForTat, 
+    GrimTrigger, 
 )
 from .match import Match
 from .tournament import Tournament
@@ -43,4 +47,12 @@ __all__ = [
     "Match",
     "Tournament",
     "Evolution",
+    "create_agent",
+    "AGENT_CLASSES",
+    "Detective",
+    "AdaptivePavlov",
+    "ContriteTitForTat",
+    "GenerousTitForTat",
+    "GrimTrigger",
+    "build_several_agents"
 ]
