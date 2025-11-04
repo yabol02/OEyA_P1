@@ -74,6 +74,12 @@ class Player(ABC):
         :rtype: None
         """
         self.history = []
+        
+    def _get_last_payoff(self, opponent):
+        my_last_action = self.history[-1]
+        last_opp_action = opponent.history[-1]
+        return self.game.evaluate_result(my_last_action, last_opp_action)[0]
+
     def __repr__(self) -> str:
         """
         Genera una representación string del objeto Player, mostrando dinámicamente
@@ -598,7 +604,7 @@ class ContriteTitForTat(Player):
         if not self.history:
             return self.COOPERATIVE_ACTION
 
-        my_last_payoff = self.payoff_history[-1]
+        my_last_payoff = self._get_last_payoff(opponent)
 
         # 1. Arrepentimiento: Si el resultado fue 0, cooperar para arreglarlo.
         if my_last_payoff == 0:
@@ -642,7 +648,7 @@ class AdaptivePavlov(Player):
         if not self.history:
             return self.COOP_ACTION
 
-        my_last_payoff = self.payoff_history[-1]
+        my_last_payoff = self._get_last_payoff(opponent)
         my_last_action = self.history[-1]
 
         # 1. WIN-STAY (Ganar-Quedarse)

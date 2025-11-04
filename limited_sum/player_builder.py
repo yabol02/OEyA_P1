@@ -50,7 +50,7 @@ def create_agent(agent_name: str, game: Game, *args, **kwargs) -> Player:
     return agent_class(game=game, name=agent_name, *args, **kwargs)
 
 
-def build_several_agents(player_configurations: dict, game: Game):
+def build_several_agents(player_configurations: dict, game: Game,  verbose = False):
     all_agents = {}
     for config in player_configurations:
         agent_name = config["name"]
@@ -68,7 +68,8 @@ def build_several_agents(player_configurations: dict, game: Game):
                 agent_instance.name = agent_name
                 
             all_agents[agent_name] = agent_instance
-            print(f"✅ Instanciado: {agent_name} ({agent_instance})")
+            if verbose:
+                print(f"✅ Instanciado: {agent_name} ({agent_instance})")
             
         except ValueError as e:
             print(f"❌ Error al instanciar {agent_name}: {e}")

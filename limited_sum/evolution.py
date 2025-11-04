@@ -3,6 +3,7 @@ import itertools
 import math
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 from .match import Match
 from .player import Player
@@ -64,6 +65,9 @@ class Evolution:
             for i, player in enumerate(self.players)
             for _ in range(self.initial_population[i])
         }
+        # Guardamos informacion tipo agente1 vs agente2 obtuvieron reward1 y reward2
+        self._head_to_head_rewards = []
+        self.head_to_head_rewards = None
 
     def natural_selection(
         self, result_tournament: dict[Player, float]
@@ -162,6 +166,12 @@ class Evolution:
 
                     player_1.clean_history()
                     player_2.clean_history()
+                    winner = player_2
+                    if score_p1 > score_p2:
+                        winner = player_1
+                    new_head_to_head = {"agent_A": player_1.name, "agent_B": player_2.name, "winner": winner.name,
+                                         "reward_A":  score_p1, "reward_B": score_p2}
+                    self._head_to_head_rewards.append(new_head_to_head)
 
             new_population_list, _ = self.natural_selection(current_ranking)
             current_population_list = new_population_list
@@ -176,7 +186,7 @@ class Evolution:
 
             for initial_player in self.players:
                 if initial_player.name not in self.count_evolution:
-                    self.count_evolution[initial_player.name] = [0] * generation
+                    self._count_evolution[initial_player.name] = [0] * generation
 
             if do_print:
                 print(f"\n--- GENERATION {generation:03d} ---")
@@ -190,6 +200,15 @@ class Evolution:
 
         if do_plot:
             self.stackplot(self.count_evolution)
+
+    def get_head_to_head_rewards(self):
+        if 0 == len(self._head_to_head_rewards):
+            return None
+        else:
+            if self.head_to_head_rewards == None:
+                self.head_to_head_rewards = pd.DataFrame(self._head_to_head_rewards)
+            
+            return self.head_to_head_rewards
 
     def stackplot(self, count_evolution: dict[str, list]) -> None:
         """
