@@ -56,7 +56,7 @@ print(list(all_agents.keys()))
 
 
 # Torneos -> Vemos  como evoluciona un agente a medida que cambia la probabilidad de equivocarse y el numero de veces que juega frente al mismo contrincante
-DO_PLAY = True # Para controlar si queremos calcular y sobreescribir los resultados o no
+DO_PLAY = False # Para controlar si queremos calcular y sobreescribir los resultados o no
 if DO_PLAY:
     #  Columnas: error_prob, n_repetitions, agent_name, reward
     rows = []
@@ -233,18 +233,29 @@ win_matrix.to_csv(OUT_DIR +'head_to_head_matrix.csv', index=False)
 # ========================
 # Guardar matriz como heatmap (sin visualizar)
 # ========================
+fig = go.Figure(data=go.Heatmap(
+    z=win_matrix.values,
+    x=win_matrix.columns,
+    y=win_matrix.index,
+    colorscale=[
+        [0.0, "rgb(0,50,0)"],     # verde muy oscuro
+        [0.5, "rgb(0,150,0)"],    # verde medio
+        [1.0, "rgb(0,255,0)"]     # verde puro
+    ],
+    colorbar=dict(title="Win rate")
+))
 
-fig, ax = plt.subplots()
-cax = ax.matshow(win_matrix)
-ax.set_xticks(range(len(win_matrix.columns)))
-ax.set_xticklabels(win_matrix.columns, rotation=90)
-ax.set_yticks(range(len(win_matrix.index)))
-ax.set_yticklabels(win_matrix.index)
-fig.colorbar(cax)
+# seteo labels y títulos
+fig.update_layout(
+    title="Head-to-head win rate matrix",
+    xaxis_title="Opponent",
+    yaxis_title="Agent",
+)
 
-# guardo la figura
-plt.savefig(OUT_DIR +'head_to_head.png')
-plt.close()
+# guardo en HTML interactivo
+pio.write_html(fig, file=f"{OUT_DIR}/head_to_head_matrix.html", auto_open=False)
+
+print("✅ Plot interactivo guardado correctamente")
 
 print("\nMatriz head-to-head guardada en head_to_head_matrix.csv y head_to_head.png")
 
