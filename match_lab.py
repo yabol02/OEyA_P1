@@ -56,7 +56,7 @@ print(list(all_agents.keys()))
 
 
 # Torneos -> Vemos  como evoluciona un agente a medida que cambia la probabilidad de equivocarse y el numero de veces que juega frente al mismo contrincante
-DO_PLAY = False # Para controlar si queremos calcular y sobreescribir los resultados o no
+DO_PLAY = True # Para controlar si queremos calcular y sobreescribir los resultados o no
 if DO_PLAY:
     #  Columnas: error_prob, n_repetitions, agent_name, reward
     rows = []
@@ -65,7 +65,7 @@ if DO_PLAY:
         error_p = _error/100
         for repetitions in range(1, 9, 2):
             print(f"Testing iteration:\nError probability: {error_p}\nNumber of repetitions (agent vs agent): {repetitions}")
-            evolution = Evolution(all_agents.values(), generations=50,
+            evolution = Evolution(all_agents.values(), generations=15,
                                     error=error_p, repetitions=repetitions)
             evolution.play(do_print=True)
             # Obtenemos el ranking de la evolucion
@@ -201,10 +201,9 @@ dfB = head_to_head_data[['agent_B','reward_B']].rename(columns={'agent_B':'agent
 rewards_long = pd.concat([dfA, dfB], ignore_index=True)
 
 reward_stats = rewards_long.groupby('agent')['reward'].agg(['mean','std','median']).fillna(0)
-reward_stats.to_csv(OUT_DIR + "reward_stats.csv", index=False)
 print("\nEstadísticas de recompensas:")
 print(reward_stats.sort_values(by="median", ascending=False))
-
+reward_stats.sort_values(by="median", ascending=False).reset_index().to_csv(OUT_DIR + "reward_stats.csv", index=False)
 # ========================
 # Matriz de win rate A vs B
 # ========================
