@@ -62,7 +62,7 @@ class Match:
         while do_cotinue_playing:
 
             a_p1 = self.player_1.strategy(self.player_2)
-            a_p2 = self.player_2.strategy(self.player_2)
+            a_p2 = self.player_2.strategy(self.player_1)
             a_p1 = a_p1 if random() > self.error else ACTIONS[max(ACTIONS) - a_p1]
             a_p2 = a_p2 if random() > self.error else ACTIONS[max(ACTIONS) - a_p2]
 
