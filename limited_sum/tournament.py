@@ -1,5 +1,7 @@
 import itertools
+
 import matplotlib.pyplot as plt
+
 from .match import Match
 from .player import Player
 

@@ -1,6 +1,7 @@
+from random import random
+
 from .game import ACTIONS
 from .player import Player
-from random import random
 
 
 class Match:
@@ -84,7 +85,7 @@ class Match:
             if self._playing_with_prob:
                 do_cotinue_playing = random() < self._continue_playing_prob
             else:
-                do_cotinue_playing = (self.n_rounds != self._round_counter)
+                do_cotinue_playing = self.n_rounds != self._round_counter
 
         score_p1 /= self._round_counter
         score_p2 /= self._round_counter
@@ -92,7 +93,8 @@ class Match:
         final_score_p1, final_score_p2 = [
             x
             for x in map(
-                lambda v: v / self._round_counter, self.player_1.compute_scores(self.player_2)
+                lambda v: v / self._round_counter,
+                self.player_1.compute_scores(self.player_2),
             )
         ]
 
@@ -106,4 +108,3 @@ class Match:
             print(
                 f"MATCH ENDED. FINAL SCORE: P1 ({self.player_1.name}): {self.score[0]:.1f} | P2 ({self.player_2.name}): {self.score[1]:.1f}"
             )
-
