@@ -189,67 +189,43 @@ print(ranking_data.sort_values(by="reward", ascending=False))
 # === 1. Reward vs error_prob ===
 fig = go.Figure()
 
-for agent_name, group in ranking_data.groupby("agent_name"):
+# Agrupar por agente y número de repeticiones, calculando la reward media
+ranking_mean = (
+    ranking_data[ranking_data["n_repetitions"] == max(ranking_data["n_repetitions"])]
+    .groupby(["agent_name", "n_repetitions", "error_prob"])["reward"]
+    .mean()
+    .reset_index()
+)
+print("Ranking mean:")
+print(f"{ranking_mean.head(10)}")
+
+# Crear la figura
+fig = go.Figure()
+
+# Dibujar cada agente
+for agent_name, group in ranking_mean.groupby("agent_name"):
     group_sorted = group.sort_values("error_prob")
-    # añado cada agente como una serie interactiva
+
     fig.add_trace(
         go.Scatter(
             x=group_sorted["error_prob"],
             y=group_sorted["reward"],
             mode="lines+markers",
-            name=agent_name,
+            name=f"{agent_name}",
         )
     )
 
-# seteo labels y título
+# Estética
 fig.update_layout(
-    title="Reward por agente vs error_prob",
+    title="Reward media por agente vs error_prob",
     xaxis_title="Error probability",
-    yaxis_title="Reward",
+    yaxis_title="Mean Reward",
     hovermode="x unified",
 )
+
 
 # guardo como HTML interactivo
 pio.write_html(fig, file=f"{OUT_DIR}/reward_vs_error_prob.html", auto_open=False)
-
-# Vamos a hacer una segunda visualizacion
-# Que ignore la mejora por n_repetitions
-# usando la media. 
-# Asi veremos que modelo es mas robusto frente a cambios
-# en la probabilidad
-
-# --- 1. Agregar por media ---
-ranking_mean = (
-    ranking_data
-    .groupby(["agent_name", "error_prob", "n_repetitions"], as_index=False)
-    .agg({"reward": "mean"})
-)
-
-# --- 2. Construir la figura ---
-fig = go.Figure()
-
-for (agent_name, n_rep), group in ranking_mean.groupby(["agent_name", "n_repetitions"]):
-    group_sorted = group.sort_values("error_prob")
-    fig.add_trace(
-        go.Scatter(
-            x=group_sorted["error_prob"],
-            y=group_sorted["reward"],
-            mode="lines+markers",
-            name=f"{agent_name} (rep={n_rep})",
-        )
-    )
-
-# --- 3. Layout ---
-fig.update_layout(
-    title="Reward promedio por agente vs error_prob (1 punto por combinación)",
-    xaxis_title="Error probability",
-    yaxis_title="Reward",
-    hovermode="x unified",
-)
-
-# --- 4. Exportar HTML ---
-pio.write_html(fig, file=f"{OUT_DIR}/MEAN_reward_vs_error_prob.html", auto_open=False)
-
 
 # === 2. Reward vs n_repetitions ===
 fig2 = go.Figure()
