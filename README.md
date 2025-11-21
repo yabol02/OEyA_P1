@@ -97,3 +97,39 @@ Con el objetivo de dejar esta complejidad adicional fuera, jugaremos un número 
 ```python
 python -m unittest discover -s tests -v
 ```
+
+# Problemas con ficheros grandes
+Debido a que los ficheros que resultan de ejecutar evoluciones grandes tienen mucho peso, se ha usado lfs (Github large file storage) para almacenarlos.
+Si se está usando la terminal para actualizar el proyecto, es probable que no aparezca la ayuda de github para sincronizar el proyecto con lfs.
+En ese caso ficheros como *best_models_for_tournament_type.csv* pueden aparecer de la siguiente manera
+
+```bash
+version https://git-lfs.github.com/spec/v1
+oid sha256:xxxxxx
+size 123456
+```
+Esto significa que Git LFS no está instalado o no se han descargado los ficheros reales.
+**Cómo solucionarlo**
+### 1. Instalar Git LFS 
+Ubuntu / Debian
+```bash
+sudo apt update
+sudo apt install git-lfs
+
+```
+Windows
+
+1. Descargar el instalador oficial desde: https://git-lfs.com
+2. Ejecutarlo y seguir los pasos (instala git-lfs.exe automáticamente).
+2. Inicializar LFS en tu repositorio
+### 2.Inicial LFS en el repositorio
+(Sólo hace falta una vez por repositorio)
+```bash
+git lfs install
+```
+
+### 3. Descargar los ficheros reales
+```bash
+git pull
+
+```
