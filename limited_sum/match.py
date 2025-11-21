@@ -83,7 +83,8 @@ class Match:
             self._round_counter -= -1
 
             if self._playing_with_prob:
-                do_cotinue_playing = random() < self._continue_playing_prob
+                r_number = random()
+                do_cotinue_playing = r_number > self._continue_playing_prob
             else:
                 do_cotinue_playing = self.n_rounds != self._round_counter
 
@@ -104,7 +105,7 @@ class Match:
         ), "Score calculated during play does not match score from compute_scores."
 
         if do_print:
-            print("-" * 60)
             print(
                 f"MATCH ENDED. FINAL SCORE: P1 ({self.player_1.name}): {self.score[0]:.1f} | P2 ({self.player_2.name}): {self.score[1]:.1f}"
             )
+            print("-" * 60)

@@ -161,7 +161,8 @@ class Evolution:
                     )
                     match.play(do_print=False)
                     score_p1, score_p2 = match.score
-
+                    # if do_print:
+                    #     print(f"MATCH ENDED. FINAL SCORE: P1 ({player_1.name}): {score_p1:.1f} | P2 ({player_2.name}): {score_p2:.1f}")
                     current_ranking[player_1] += score_p1
                     current_ranking[player_2] += score_p2
 

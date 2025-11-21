@@ -34,7 +34,7 @@ d_simpletron = Deterministic_simpletron(game, "d_simpletron")
 p_tft = PermissiveTitForTat(game, "PermissiveTitForTat")
 
 # Modifica las siguientes líneas a conveniencia para llevar a cabo distintos tests
-match = Match(always0_player, focal5_player, n_rounds=10, error=0.2)
+match = Match(d_simpletron, focal5_player, n_rounds=0.1, error=0.2)
 match.play(do_print=True)
 
 # ====================== tournament.py ======================
@@ -42,7 +42,7 @@ game = Game()
 
 all_players = (always0_player, always3_player, random_player, focal5_player, tft_player, c_infernal, d_simpletron, p_tft)
 
-tournament = Tournament(all_players, n_rounds=10, error=0.0, repetitions=10)
+tournament = Tournament(all_players, n_rounds=0.1, error=0.0, repetitions=10)
 tournament.play()
 tournament.plot_results()
 

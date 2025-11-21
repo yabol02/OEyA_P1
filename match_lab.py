@@ -1,453 +1,248 @@
-# En este script podemos probar configuraciones de Match
-# y ver qué estrategias funcionan mejor
-OUT_DIR = "./results/"
-RANKING_PATH = OUT_DIR + "tournament_results.csv"
-HEAD_TO_HEAD_PATH = OUT_DIR + "head_to_head_results.csv"
+import os
 import pandas as pd
+from pathlib import Path
 import numpy as np
-from scipy.stats import ttest_rel, wilcoxon
-import matplotlib.pyplot as plt
+
 from limited_sum import Game, build_several_agents, Evolution
-import plotly.graph_objects as go
-import plotly.io as pio
 
+# -----------------------------------------------------------------------------
+# LÓGICA PRINCIPAL
+# -----------------------------------------------------------------------------
 
-game = Game()
+def get_user_input():
+    """
+    Encapsulamos la lógica de interacción con el usuario para mantener el scope limpio.
+    Se realizan conversiones de tipo básicas.
+    """
+    print("--- Configuración del Match ---")
+    folder_name = "results/" +  input("Nombre de la carpeta para guardar ficheros: ").strip()
+    
+    # Usamos float para probabilidades y validamos rangos más adelante
+    min_error = float(input("Probabilidad mínima de error (0.0 - 1.0): "))
+    max_error = float(input("Probabilidad máxima de error (0.0 - 1.0): "))
+    
+    min_rep = int(input("Mínimo número de repeticiones: "))
+    max_rep = int(input("Máximo número de repeticiones: "))
+    
+    duration_input = float(input("Duración del Evolution ( < 1 = probabilidad, >= 1 = n_generaciones): "))
+    
+    return folder_name, min_error, max_error, min_rep, max_rep, duration_input
 
-# Los agentes que queremos poner a prueba
-PLAYER_CONFIGURATIONS = [
-    {
-        "name": "Always0",
-        "type": "Always0",
-    },
-    {
-        "name": "Always3",
-        "type": "Always3",
-    },
-    {
-        "name": "UniformRandom",
-        "type": "UniformRandom",
-    },
-    {
-        "name": "Focal5",
-        "type": "Focal5",
-    },
-    {
-        "name": "TitForTat",
-        "type": "TitForTat",
-    },
-    {
-        "name": "CastigadorInfernal",
-        "type": "CastigadorInfernal",
-    },
-    # Optimista: Comieza eligiendo 2, not TFT: Si decide castigar elegira siempre 3
-    {
-        "name": "Deterministic_simpletron_optimist_notTfT",
-        "type": "Deterministic_simpletron",
-    },
-    # Pesimista: Comieza eligiendo 3
-    {
-        "name": "Deterministic_simpletron_pesimist_notTfT",
-        "type": "Deterministic_simpletron",
-        "kwargs": {"pesimist_start": True},
-    },
-    # TFT punishment: Al castigar, juega como TFT
-    {
-        "name": "Deterministic_simpletron_optimist_TfT",
-        "type": "Deterministic_simpletron",
-        "kwargs": {"tit_for_tat_punishment": True},
-    },
-    {
-        "name": "Deterministic_simpletron_pesimist_notTfT",
-        "type": "Deterministic_simpletron",
-        "kwargs": {"pesimist_start": True, "tit_for_tat_punishment": True},
-    },
-    {
-        "name": "Permisive_TFT_patience_3",
-        "type": "PermissiveTitForTat",
-    },
-    {
-        "name": "Permisive_TFT_patience_5",
-        "type": "PermissiveTitForTat",
-        "kwargs": {
-            "initial_patience": 5,
-        },
-    },
-    {
-        "name": "Permisive_TFT_patience_10",
-        "type": "PermissiveTitForTat",
-        "kwargs": {
-            "initial_patience": 10,
-        },
-    },
-    {
-        "name": "GrimTrigger",
-        "type": "GrimTrigger",
-    },
-    # TFT pero perdona con cierta probabilidad
-    {
-        "name": "GenerousTitForTat_generous_p_0.1",
-        "type": "GenerousTitForTat",
-        "kwargs": {"prob_generosidad": 0.1},
-    },
-    {
-        "name": "GenerousTitForTat_generous_p_0.25",
-        "type": "GenerousTitForTat",
-        "kwargs": {"prob_generosidad": 0.25},
-    },
-    {
-        "name": "GenerousTitForTat_generous_p_0.5",
-        "type": "GenerousTitForTat",
-        "kwargs": {"prob_generosidad": 0.5},
-    },
-    {
-        "name": "GenerousTitForTat_generous_p_0.75",
-        "type": "GenerousTitForTat",
-        "kwargs": {"prob_generosidad": 0.75},
-    },
-    {
-        "name": "ContriteTitForTat",
-        "type": "ContriteTitForTat",
-    },
-    # La version determinista cambia de cooperar a rivalizar si no obtiene un beneficio
-    {
-        "name": "AdaptivePavlov_deterministic",
-        "type": "AdaptivePavlov",
-    },
-    # La version random tiene un 50% de posibilidades de cambiar de estrategia o no
-    {
-        "name": "AdaptivePavlov_random",
-        "type": "AdaptivePavlov",
-        "kwargs": {"shift_strategy": "random"},
-    },
-    # La siguiente version siempre coopera
-    {
-        "name": "AdaptivePavlov_random",
-        "type": "AdaptivePavlov",
-        "kwargs": {"shift_strategy": "always_coop"},
-    },
-    {
-        "name": "Detective",
-        "type": "Detective",
-    },
-]
+def generate_ranges(min_val, max_val, step, is_integer=False):
+    """
+    Generador auxiliar para crear rangos inclusivos.
+    Maneja tanto floats como enteros.
+    """
+    current = min_val
+    while current <= max_val:
+        yield int(current) if is_integer else round(current, 4)
+        current += step
 
-# Instanciamos los agentes:
-all_agents = build_several_agents(PLAYER_CONFIGURATIONS, game, verbose=False)
-# 'all_agents' ahora contiene un diccionario de todas tus instancias configuradas.
-print("\nAgentes listos para el Torneo:")
-print(list(all_agents.keys()))
+def run_match_simulation(all_agents):
+    # 1. Obtención de inputs
+    folder_name, min_error, max_error, min_rep, max_rep, n_rounds = get_user_input()
 
+    # 2. Configuración de directorios (Uso de pathlib por ser más robusto que os.path)
+    base_path = Path(folder_name)
+    try:
+        base_path.mkdir(parents=True, exist_ok=True)
+        print(f"Directorio '{base_path.resolve()}' preparado.")
+    except Exception as e:
+        print(f"Error crítico creando el directorio: {e}")
+        return
 
-# Torneos -> Vemos  como evoluciona un agente a medida que cambia la probabilidad de equivocarse y el numero de veces que juega frente al mismo contrincante
-DO_PLAY = (
-    False  # Para controlar si queremos calcular y sobreescribir los resultados o no
-)
-if DO_PLAY:
-    #  Columnas: error_prob, n_repetitions, agent_name, reward
+    # Definición de rutas de salida
+    ranking_path = base_path / "ranking_data.csv"
+    head_to_head_path = base_path / "head_to_head_data.csv"
+
+    # 3. Lógica de control de duración (Strategy Pattern simplificado)
+    # Determinamos si pasamos generations o termination_prob al constructor
+
     rows = []
     head_to_head_data = pd.DataFrame()
-    for _error in range(0, 26, 5):
-        error_p = _error / 100
-        for repetitions in range(1, 9, 2):
-            print(
-                f"Testing iteration:\nError probability: {error_p}\nNumber of repetitions (agent vs agent): {repetitions}"
-            )
+
+    STEP_ERROR = 0.05
+    STEP_REP = 2
+    N_GENERATIONS = 15 # A partir de 15 generaciones, la evolucion converge
+
+    # 4. Bucles de simulación
+    # Usamos generadores para evitar problemas de punto flotante en el range()
+    error_range = generate_ranges(min_error, max_error, STEP_ERROR)
+    
+    for error_p in error_range:
+        # Reiniciamos el generador de repeticiones para cada error
+        rep_range = generate_ranges(min_rep, max_rep, STEP_REP, is_integer=True)
+        
+        for repetitions in rep_range:
+            print(f"--- Ejecutando: Error {error_p} | Repeticiones {repetitions} ---")
+            
+            # Instanciación dinámica
             evolution = Evolution(
-                all_agents.values(),
-                generations=15,
+                players = all_agents.values(), 
+                generations=N_GENERATIONS,
                 error=error_p,
                 repetitions=repetitions,
+                n_rounds=n_rounds,                
             )
+            
             evolution.play(do_print=True)
-            # Obtenemos el ranking de la evolucion
-            for player_name, player_object in all_agents.items():
-                for ranking_player_object, ranking_reward in evolution.ranking.items():
-                    reward = None
-                    if ranking_player_object.name == player_name:
-                        reward = ranking_reward
-                        new_row = {
-                            "error_prob": error_p,
-                            "n_repetitions": repetitions,
-                            "agent_name": player_name,
-                            "reward": reward,
-                        }
-                        rows.append(new_row)
-            # Obtenemos la informacion de los enfrentamientos por parejas
-            head_to_head_data = pd.concat(
-                [head_to_head_data, evolution.get_head_to_head_rewards()]
-            )
 
-    ranking_data = pd.DataFrame(rows)
-    ranking_data.to_csv(RANKING_PATH, index=False)
-    head_to_head_data.to_csv(HEAD_TO_HEAD_PATH, index=False)
-else:
-    ranking_data = pd.read_csv(RANKING_PATH)
-    head_to_head_data = pd.read_csv(HEAD_TO_HEAD_PATH)
-print("Ranking data:")
-print(ranking_data.sort_values(by="reward", ascending=False))
-# === 1. Reward vs error_prob ===
-fig = go.Figure()
+            # 5. Extracción de datos (Optimización)
+            for agent_obj, reward in evolution.ranking.items():
+                rows.append({
+                    "error_prob": error_p,
+                    "n_repetitions": repetitions,
+                    "agent_name": agent_obj.name,
+                    "reward": reward,
+                    "n_generations": N_GENERATIONS
+                })
 
-# Agrupar por agente y número de repeticiones, calculando la reward media
-ranking_mean = (
-    ranking_data[["agent_name", "error_prob", "reward"]] #[ranking_data["n_repetitions"] == max(ranking_data["n_repetitions"])]
-    .groupby(["agent_name", "error_prob"])["reward"]
-    .mean()
-    .reset_index()
-)
+            # Concatenación de DataFrames
+            current_h2h = evolution.get_head_to_head_rewards()
+            if not current_h2h.empty:
+                head_to_head_data = pd.concat([head_to_head_data, current_h2h], ignore_index=True)
 
-
-# Crear la figura
-fig = go.Figure()
-
-# Dibujar cada agente
-for agent_name, group in ranking_mean.groupby("agent_name"):
-    group_sorted = group.sort_values("error_prob")
-
-    fig.add_trace(
-        go.Scatter(
-            x=group_sorted["error_prob"],
-            y=group_sorted["reward"],
-            mode="lines+markers",
-            name=f"{agent_name}",
-        )
-    )
-
-# Estética
-fig.update_layout(
-    title="Reward media por agente vs error_prob",
-    xaxis_title="Error probability",
-    yaxis_title="Mean Reward",
-    hovermode="x unified",
-)
-
-
-# guardo como HTML interactivo
-pio.write_html(fig, file=f"{OUT_DIR}/reward_vs_error_prob.html", auto_open=False)
-
-# === 2. Reward vs n_repetitions ===
-fig2 = go.Figure()
-ranking_mean = (
-    ranking_data[["agent_name", "n_repetitions", "reward"]] 
-    .groupby(["agent_name", "n_repetitions"])["reward"]
-    .mean()
-    .reset_index()
-)
-
-for agent_name, group in ranking_mean.groupby("agent_name"):
-    group_sorted = group.sort_values("n_repetitions")
-    fig2.add_trace(
-        go.Scatter(
-            x=group_sorted["n_repetitions"],
-            y=group_sorted["reward"],
-            mode="lines+markers",
-            name=agent_name,
-        )
-    )
-
-fig2.update_layout(
-    title="Reward por agente vs n_repetitions",
-    xaxis_title="Número de repeticiones",
-    yaxis_title="Reward",
-    hovermode="x unified",
-)
-
-pio.write_html(fig2, file=f"{OUT_DIR}/reward_vs_repetitions.html", auto_open=False)
-
-print("✅ Plots interactivos generados correctamente")
-
-
-fig3 = go.Figure()
-
-# Partimos del ranking_mean del gráfico anterior
-ranking_mean = (
-    ranking_data[["agent_name", "n_repetitions", "reward"]] 
-    .groupby(["agent_name", "n_repetitions"])["reward"]
-    .mean()
-    .reset_index()
-)
-
-derivative_list = []
-
-for agent_name, group in ranking_mean.groupby("agent_name"):
-    group_sorted = group.sort_values("n_repetitions")
-
-    # Diferencia discreta: Δreward / Δn
-    # Como Δn casi siempre es 1, es básicamente la pendiente entre puntos sucesivos
-    d_reward = np.diff(group_sorted["reward"])
-    d_n = np.diff(group_sorted["n_repetitions"])
-
-    derivative = d_reward / d_n  # vector de pendientes
-    n_midpoints = group_sorted["n_repetitions"][:-1] + d_n / 2
-
-    # Guardamos en caso de necesitar análisis adicional
-    tmp = pd.DataFrame({
-        "agent_name": agent_name,
-        "n_repetitions_mid": n_midpoints,
-        "d_reward_dn": derivative
-    })
-    derivative_list.append(tmp)
-
-    # Añadir al gráfico
-    fig3.add_trace(
-        go.Scatter(
-            x=n_midpoints,
-            y=derivative,
-            mode="lines+markers",
-            name=agent_name,
-        )
-    )
-
-# Concatenamos las derivadas completas (opcional por si lo necesitas luego)
-ranking_derivative = pd.concat(derivative_list, ignore_index=True)
-
-# Estética
-fig3.update_layout(
-    title="Velocidad de Mejora del Reward vs n_repetitions",
-    xaxis_title="n_repetitions (punto medio)",
-    yaxis_title="d(Reward)/d(n_repetitions)",
-    hovermode="x unified",
-)
-
-# Guardar en disco
-output_file = f"{OUT_DIR}/reward_derivative_vs_repetitions.html"
-pio.write_html(fig3, file=output_file, auto_open=False)
-
-print(f"✅ Derivada generada y guardada en: {output_file}")
-
-
-# ========================
-# Top 3 modelos por tipo de torneo
-# ========================
-
-# agrupar por tipo de torneo y agente, calculando estadísticas
-grouped = (
-    ranking_data.groupby(["error_prob", "n_repetitions", "agent_name"])["reward"]
-    .agg(["mean", "std", "min", "max"])
-    .reset_index()
-)
-
-
-# función auxiliar para obtener top 3 por mean reward
-def top3(df):
-    # orden descendente por mean
-    df = df.sort_values("mean", ascending=False)
-    return df.head(3)
-
-
-# aplicar top3 sin generar FutureWarning
-best_models = grouped.groupby(["error_prob", "n_repetitions"], group_keys=False).apply(
-    top3
-)
-
-# guardo resultados
-best_models.to_csv(OUT_DIR + "best_models_for_tournament_type.csv", index=False)
-
-# imprimir en el formato solicitado
-for (err, reps), subdf in best_models.groupby(["error_prob", "n_repetitions"]):
-    print("\nTournament:")
-    print(f"Error probability: {err} | Number of repetitions: {reps}")
-    for _, row in subdf.iterrows():
-        print(
-            f"    - {row['agent_name']}: mean={row['mean']:.4f}, std={row['std']:.4f}, min={row['min']:.4f}, max={row['max']:.4f}"
-        )
-
-
-# ========================
-# Win rate por agente
-# ========================
-
-# Contar victorias por agente (winner es el nombre del agente ganador)
-win_counts = head_to_head_data["winner"].value_counts()
-
-# Como cada fila es un match entre dos agentes, cada agente participa en dos columnas
-# extraigo todos los agentes
-all_agents = pd.concat([head_to_head_data["agent_A"], head_to_head_data["agent_B"]])
-match_counts = all_agents.value_counts()
-
-# Win rate = victorias totales / partidas jugadas totales
-win_rate = (win_counts / match_counts).fillna(0)
-
-print("Win rate por agente:")
-print(win_rate.sort_values(ascending=False))
-
-# ========================
-# Reward media, std y median
-# ========================
-
-# Agrupar por agent_A y reward_A / agent_B y reward_B requiere apilar los datos
-# genero primero un dataframe "long" con agent y reward
-dfA = head_to_head_data[["agent_A", "reward_A"]].rename(
-    columns={"agent_A": "agent", "reward_A": "reward"}
-)
-dfB = head_to_head_data[["agent_B", "reward_B"]].rename(
-    columns={"agent_B": "agent", "reward_B": "reward"}
-)
-rewards_long = pd.concat([dfA, dfB], ignore_index=True)
-
-reward_stats = (
-    rewards_long.groupby("agent")["reward"].agg(["mean", "std", "median"]).fillna(0)
-)
-print("\nEstadísticas de recompensas:")
-print(reward_stats.sort_values(by="median", ascending=False))
-reward_stats.sort_values(by="median", ascending=False).reset_index().to_csv(
-    OUT_DIR + "reward_stats.csv", index=False
-)
-# ========================
-# Matriz de win rate A vs B
-# ========================
-
-
-# Crear una tabla de frecuencia de victorias: filas = agente ganador, columnas = perdedor
-# Para esto, primero identifico al perdedor
-def get_loser(row):
-    if row["winner"] == row["agent_A"]:
-        return row["agent_B"]
-    elif row["winner"] == row["agent_B"]:
-        return row["agent_A"]
+    # 6. Persistencia de datos
+    if rows:
+        ranking_df = pd.DataFrame(rows)
+        ranking_df.to_csv(ranking_path, index=False)
+        print(f"Guardado: {ranking_path}")
     else:
-        return None
+        print("Advertencia: No se generaron datos de ranking.")
 
+    if not head_to_head_data.empty:
+        head_to_head_data.to_csv(head_to_head_path, index=False)
+        print(f"Guardado: {head_to_head_path}")
 
-head_to_head_data["loser"] = head_to_head_data.apply(get_loser, axis=1)
+def get_all_agents(game):
+    # Los agentes que queremos poner a prueba
+    PLAYER_CONFIGURATIONS = [
+        {
+            "name": "Always0",
+            "type": "Always0",
+        },
+        {
+            "name": "Always3",
+            "type": "Always3",
+        },
+        {
+            "name": "UniformRandom",
+            "type": "UniformRandom",
+        },
+        {
+            "name": "Focal5",
+            "type": "Focal5",
+        },
+        {
+            "name": "TitForTat",
+            "type": "TitForTat",
+        },
+        {
+            "name": "CastigadorInfernal",
+            "type": "CastigadorInfernal",
+        },
+        # Optimista: Comieza eligiendo 2, not TFT: Si decide castigar elegira siempre 3
+        {
+            "name": "Deterministic_simpletron_optimist_notTfT",
+            "type": "Deterministic_simpletron",
+        },
+        # Pesimista: Comieza eligiendo 3
+        {
+            "name": "Deterministic_simpletron_pesimist_notTfT",
+            "type": "Deterministic_simpletron",
+            "kwargs": {"pesimist_start": True},
+        },
+        # TFT punishment: Al castigar, juega como TFT
+        {
+            "name": "Deterministic_simpletron_optimist_TfT",
+            "type": "Deterministic_simpletron",
+            "kwargs": {"tit_for_tat_punishment": True},
+        },
+        {
+            "name": "Deterministic_simpletron_pesimist_notTfT",
+            "type": "Deterministic_simpletron",
+            "kwargs": {"pesimist_start": True, "tit_for_tat_punishment": True},
+        },
+        {
+            "name": "Permisive_TFT_patience_3",
+            "type": "PermissiveTitForTat",
+        },
+        {
+            "name": "Permisive_TFT_patience_5",
+            "type": "PermissiveTitForTat",
+            "kwargs": {
+                "initial_patience": 5,
+            },
+        },
+        {
+            "name": "Permisive_TFT_patience_10",
+            "type": "PermissiveTitForTat",
+            "kwargs": {
+                "initial_patience": 10,
+            },
+        },
+        {
+            "name": "GrimTrigger",
+            "type": "GrimTrigger",
+        },
+        # TFT pero perdona con cierta probabilidad
+        {
+            "name": "GenerousTitForTat_generous_p_0.1",
+            "type": "GenerousTitForTat",
+            "kwargs": {"prob_generosidad": 0.1},
+        },
+        {
+            "name": "GenerousTitForTat_generous_p_0.25",
+            "type": "GenerousTitForTat",
+            "kwargs": {"prob_generosidad": 0.25},
+        },
+        {
+            "name": "GenerousTitForTat_generous_p_0.5",
+            "type": "GenerousTitForTat",
+            "kwargs": {"prob_generosidad": 0.5},
+        },
+        {
+            "name": "GenerousTitForTat_generous_p_0.75",
+            "type": "GenerousTitForTat",
+            "kwargs": {"prob_generosidad": 0.75},
+        },
+        {
+            "name": "ContriteTitForTat",
+            "type": "ContriteTitForTat",
+        },
+        # La version determinista cambia de cooperar a rivalizar si no obtiene un beneficio
+        {
+            "name": "AdaptivePavlov_deterministic",
+            "type": "AdaptivePavlov",
+        },
+        # La version random tiene un 50% de posibilidades de cambiar de estrategia o no
+        {
+            "name": "AdaptivePavlov_random",
+            "type": "AdaptivePavlov",
+            "kwargs": {"shift_strategy": "random"},
+        },
+        # La siguiente version siempre coopera
+        {
+            "name": "AdaptivePavlov_random",
+            "type": "AdaptivePavlov",
+            "kwargs": {"shift_strategy": "always_coop"},
+        },
+        {
+            "name": "Detective",
+            "type": "Detective",
+        },
+    ]
 
-# Tabla de conteo de victorias por ganador vs perdedor
-win_matrix_counts = pd.crosstab(head_to_head_data["winner"], head_to_head_data["loser"])
-
-# Ahora normalizamos por fila para obtener el win rate contra cada oponente
-win_matrix = win_matrix_counts.div(win_matrix_counts.sum(axis=1), axis=0).fillna(0)
-
-# Guardar matriz en CSV
-win_matrix.to_csv(OUT_DIR + "head_to_head_matrix.csv", index=False)
-
-# ========================
-# Guardar matriz como heatmap (sin visualizar)
-# ========================
-fig = go.Figure(
-    data=go.Heatmap(
-        z=win_matrix.values,
-        x=win_matrix.columns,
-        y=win_matrix.index,
-        colorscale=[
-            [0.0, "rgb(0,50,0)"],  # verde muy oscuro
-            [0.5, "rgb(0,150,0)"],  # verde medio
-            [1.0, "rgb(0,255,0)"],  # verde puro
-        ],
-        colorbar=dict(title="Win rate"),
-    )
-)
-
-# seteo labels y títulos
-fig.update_layout(
-    title="Head-to-head win rate matrix",
-    xaxis_title="Opponent",
-    yaxis_title="Agent",
-)
-
-# guardo en HTML interactivo
-pio.write_html(fig, file=f"{OUT_DIR}/head_to_head_matrix.html", auto_open=False)
-
-print("✅ Plot interactivo guardado correctamente")
-
-print("\nMatriz head-to-head guardada en head_to_head_matrix.csv y head_to_head.png")
+    # Instanciamos los agentes:
+    all_agents = build_several_agents(PLAYER_CONFIGURATIONS, game, verbose=False)
+    # 'all_agents' ahora contiene un diccionario de todas tus instancias configuradas.
+    return all_agents
+if __name__ == "__main__":
+    game = Game()
+    all_agents = get_all_agents(game)
+    try:
+        run_match_simulation(all_agents)
+    except KeyboardInterrupt:
+        print("\nEjecución interrumpida por el usuario.")
+    except Exception as e:
+        print(f"Ha ocurrido un error inesperado: {e}")
