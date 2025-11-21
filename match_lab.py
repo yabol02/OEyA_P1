@@ -191,13 +191,12 @@ fig = go.Figure()
 
 # Agrupar por agente y número de repeticiones, calculando la reward media
 ranking_mean = (
-    ranking_data[ranking_data["n_repetitions"] == max(ranking_data["n_repetitions"])]
-    .groupby(["agent_name", "n_repetitions", "error_prob"])["reward"]
+    ranking_data[["agent_name", "error_prob", "reward"]] #[ranking_data["n_repetitions"] == max(ranking_data["n_repetitions"])]
+    .groupby(["agent_name", "error_prob"])["reward"]
     .mean()
     .reset_index()
 )
-print("Ranking mean:")
-print(f"{ranking_mean.head(10)}")
+
 
 # Crear la figura
 fig = go.Figure()
@@ -229,8 +228,14 @@ pio.write_html(fig, file=f"{OUT_DIR}/reward_vs_error_prob.html", auto_open=False
 
 # === 2. Reward vs n_repetitions ===
 fig2 = go.Figure()
+ranking_mean = (
+    ranking_data[["agent_name", "n_repetitions", "reward"]] 
+    .groupby(["agent_name", "n_repetitions"])["reward"]
+    .mean()
+    .reset_index()
+)
 
-for agent_name, group in ranking_data.groupby("agent_name"):
+for agent_name, group in ranking_mean.groupby("agent_name"):
     group_sorted = group.sort_values("n_repetitions")
     fig2.add_trace(
         go.Scatter(
@@ -251,6 +256,65 @@ fig2.update_layout(
 pio.write_html(fig2, file=f"{OUT_DIR}/reward_vs_repetitions.html", auto_open=False)
 
 print("✅ Plots interactivos generados correctamente")
+
+
+fig3 = go.Figure()
+
+# Partimos del ranking_mean del gráfico anterior
+ranking_mean = (
+    ranking_data[["agent_name", "n_repetitions", "reward"]] 
+    .groupby(["agent_name", "n_repetitions"])["reward"]
+    .mean()
+    .reset_index()
+)
+
+derivative_list = []
+
+for agent_name, group in ranking_mean.groupby("agent_name"):
+    group_sorted = group.sort_values("n_repetitions")
+
+    # Diferencia discreta: Δreward / Δn
+    # Como Δn casi siempre es 1, es básicamente la pendiente entre puntos sucesivos
+    d_reward = np.diff(group_sorted["reward"])
+    d_n = np.diff(group_sorted["n_repetitions"])
+
+    derivative = d_reward / d_n  # vector de pendientes
+    n_midpoints = group_sorted["n_repetitions"][:-1] + d_n / 2
+
+    # Guardamos en caso de necesitar análisis adicional
+    tmp = pd.DataFrame({
+        "agent_name": agent_name,
+        "n_repetitions_mid": n_midpoints,
+        "d_reward_dn": derivative
+    })
+    derivative_list.append(tmp)
+
+    # Añadir al gráfico
+    fig3.add_trace(
+        go.Scatter(
+            x=n_midpoints,
+            y=derivative,
+            mode="lines+markers",
+            name=agent_name,
+        )
+    )
+
+# Concatenamos las derivadas completas (opcional por si lo necesitas luego)
+ranking_derivative = pd.concat(derivative_list, ignore_index=True)
+
+# Estética
+fig3.update_layout(
+    title="Velocidad de Mejora del Reward vs n_repetitions",
+    xaxis_title="n_repetitions (punto medio)",
+    yaxis_title="d(Reward)/d(n_repetitions)",
+    hovermode="x unified",
+)
+
+# Guardar en disco
+output_file = f"{OUT_DIR}/reward_derivative_vs_repetitions.html"
+pio.write_html(fig3, file=output_file, auto_open=False)
+
+print(f"✅ Derivada generada y guardada en: {output_file}")
 
 
 # ========================
