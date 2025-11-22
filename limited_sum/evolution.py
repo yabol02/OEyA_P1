@@ -66,6 +66,10 @@ class Evolution:
             for i, player in enumerate(self.players)
             for _ in range(self.initial_population[i])
         }
+        # Durante play() se borran las claves de los agentes menos adaptados.
+        # Necesitamos un ranking que no borre agentes para poder procesar sus rewards mas adelante
+        self.cumulative_ranking = copy.deepcopy(self.ranking) 
+        #
         # Guardamos informacion tipo agente1 vs agente2 obtuvieron reward1 y reward2
         self._head_to_head_rewards = []
         self.head_to_head_rewards = None
@@ -199,9 +203,13 @@ class Evolution:
         print("=" * 50)
 
         self.ranking = current_ranking
-
+        self.update_cumulative_ranking(current_ranking)
         if do_plot:
             self.stackplot(self.count_evolution)
+
+    def update_cumulative_ranking(self, current_ranking):
+        for k,v in current_ranking.items():
+            self.cumulative_ranking[k] = v
 
     def get_head_to_head_rewards(self):
         if 0 == len(self._head_to_head_rewards):

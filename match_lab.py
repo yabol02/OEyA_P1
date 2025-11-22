@@ -24,7 +24,7 @@ def get_user_input():
     min_rep = int(input("Mínimo número de repeticiones: "))
     max_rep = int(input("Máximo número de repeticiones: "))
     
-    duration_input = float(input("Duración del Evolution ( < 1 = probabilidad, >= 1 = n_generaciones): "))
+    duration_input = float(input("Duración del Match ( < 1 = probabilidad, >= 1 = n_generaciones): "))
     
     return folder_name, min_error, max_error, min_rep, max_rep, duration_input
 
@@ -86,9 +86,8 @@ def run_match_simulation(all_agents):
             )
             
             evolution.play(do_print=True)
-
             # 5. Extracción de datos (Optimización)
-            for agent_obj, reward in evolution.ranking.items():
+            for agent_obj, reward in evolution.cumulative_ranking.items():
                 rows.append({
                     "error_prob": error_p,
                     "n_repetitions": repetitions,
@@ -223,7 +222,7 @@ def get_all_agents(game):
         },
         # La siguiente version siempre coopera
         {
-            "name": "AdaptivePavlov_random",
+            "name": "AdaptivePavlov_random_always_coop",
             "type": "AdaptivePavlov",
             "kwargs": {"shift_strategy": "always_coop"},
         },

@@ -1,0 +1,98 @@
+=== TOP 3 MODELS (NORMALIZED REWARD) ===
+
+Tournament [Error: 0.00 | Reps: 1]
+==================================
+   - Permisive_TFT_patience_10 | Mean Norm. Reward: 1.4241 (std: 1.0589)
+   - Deterministic_simpletron_optimist_notTfT | Mean Norm. Reward: 1.3589 (std: 1.0348)
+   - ContriteTitForTat | Mean Norm. Reward: 1.1711 (std: 1.0808)
+   - AdaptivePavlov_random | Mean Norm. Reward: 1.0778 (std: 1.0976)
+   - AdaptivePavlov_deterministic | Mean Norm. Reward: 1.0778 (std: 1.0976)
+
+Tournament [Error: 0.00 | Reps: 3]
+==================================
+   - Permisive_TFT_patience_10 | Mean Norm. Reward: 1.4282 (std: 1.0616)
+   - Deterministic_simpletron_optimist_notTfT | Mean Norm. Reward: 1.3463 (std: 1.0907)
+   - ContriteTitForTat | Mean Norm. Reward: 1.3049 (std: 1.0812)
+   - AdaptivePavlov_deterministic | Mean Norm. Reward: 1.0778 (std: 1.0976)
+   - AdaptivePavlov_random | Mean Norm. Reward: 1.0379 (std: 1.0976)
+
+Tournament [Error: 0.05 | Reps: 1]
+==================================
+   - Permisive_TFT_patience_10 | Mean Norm. Reward: 1.4330 (std: 1.0453)
+   - AdaptivePavlov_deterministic | Mean Norm. Reward: 1.3777 (std: 1.0899)
+   - Deterministic_simpletron_optimist_notTfT | Mean Norm. Reward: 1.2978 (std: 1.0755)
+   - AdaptivePavlov_random | Mean Norm. Reward: 1.2650 (std: 1.1029)
+   - ContriteTitForTat | Mean Norm. Reward: 0.6283 (std: 0.9850)
+
+Tournament [Error: 0.05 | Reps: 3]
+==================================
+   - AdaptivePavlov_deterministic | Mean Norm. Reward: 1.5630 (std: 1.0292)
+   - Permisive_TFT_patience_10 | Mean Norm. Reward: 1.4054 (std: 1.0447)
+   - Deterministic_simpletron_optimist_notTfT | Mean Norm. Reward: 1.3162 (std: 1.0906)
+   - AdaptivePavlov_random | Mean Norm. Reward: 1.2193 (std: 1.1249)
+   - Deterministic_simpletron_pesimist_notTfT | Mean Norm. Reward: 0.1422 (std: 0.5506)
+
+Tournament [Error: 0.10 | Reps: 1]
+==================================
+   - AdaptivePavlov_deterministic | Mean Norm. Reward: 1.5441 (std: 1.0330)
+   - AdaptivePavlov_random | Mean Norm. Reward: 1.5141 (std: 1.0466)
+   - Permisive_TFT_patience_10 | Mean Norm. Reward: 1.2495 (std: 1.1199)
+   - Deterministic_simpletron_optimist_notTfT | Mean Norm. Reward: 1.1555 (std: 1.1364)
+   - Deterministic_simpletron_pesimist_notTfT | Mean Norm. Reward: 0.3781 (std: 0.8424)
+
+Tournament [Error: 0.10 | Reps: 3]
+==================================
+   - AdaptivePavlov_deterministic | Mean Norm. Reward: 1.6597 (std: 0.9789)
+   - AdaptivePavlov_random | Mean Norm. Reward: 1.3340 (std: 1.1052)
+   - Deterministic_simpletron_optimist_notTfT | Mean Norm. Reward: 1.2701 (std: 1.1074)
+   - Permisive_TFT_patience_10 | Mean Norm. Reward: 1.1822 (std: 1.1250)
+   - Deterministic_simpletron_pesimist_notTfT | Mean Norm. Reward: 0.1450 (std: 0.5616)
+
+Tournament [Error: 0.15 | Reps: 1]
+==================================
+   - AdaptivePavlov_random | Mean Norm. Reward: 1.5006 (std: 1.0374)
+   - AdaptivePavlov_deterministic | Mean Norm. Reward: 1.4845 (std: 1.0440)
+   - Permisive_TFT_patience_10 | Mean Norm. Reward: 1.3184 (std: 1.0674)
+   - Deterministic_simpletron_optimist_notTfT | Mean Norm. Reward: 0.9691 (std: 1.1162)
+   - Deterministic_simpletron_optimist_TfT | Mean Norm. Reward: 0.3775 (std: 0.8409)
+
+Tournament [Error: 0.15 | Reps: 3]
+==================================
+   - AdaptivePavlov_deterministic | Mean Norm. Reward: 1.6183 (std: 0.9790)
+   - AdaptivePavlov_random | Mean Norm. Reward: 1.3877 (std: 1.0743)
+   - Permisive_TFT_patience_10 | Mean Norm. Reward: 1.2294 (std: 1.1019)
+   - Deterministic_simpletron_optimist_notTfT | Mean Norm. Reward: 1.0550 (std: 1.1159)
+   - Deterministic_simpletron_pesimist_notTfT | Mean Norm. Reward: 0.3887 (std: 0.8659)
+
+Tournament [Error: 0.20 | Reps: 1]
+==================================
+   - AdaptivePavlov_deterministic | Mean Norm. Reward: 1.5911 (std: 0.9761)
+   - Permisive_TFT_patience_10 | Mean Norm. Reward: 1.3331 (std: 1.0556)
+   - AdaptivePavlov_random | Mean Norm. Reward: 1.2204 (std: 1.0939)
+   - Deterministic_simpletron_optimist_TfT | Mean Norm. Reward: 0.8303 (std: 1.0595)
+   - ContriteTitForTat | Mean Norm. Reward: 0.5441 (std: 0.9354)
+
+Tournament [Error: 0.20 | Reps: 3]
+==================================
+   - AdaptivePavlov_deterministic | Mean Norm. Reward: 1.5420 (std: 1.0002)
+   - AdaptivePavlov_random | Mean Norm. Reward: 1.4559 (std: 1.0421)
+   - Permisive_TFT_patience_10 | Mean Norm. Reward: 1.3517 (std: 1.0466)
+   - Deterministic_simpletron_optimist_notTfT | Mean Norm. Reward: 0.8500 (std: 1.0840)
+   - Deterministic_simpletron_optimist_TfT | Mean Norm. Reward: 0.3738 (std: 0.8324)
+
+Tournament [Error: 0.25 | Reps: 1]
+==================================
+   - AdaptivePavlov_deterministic | Mean Norm. Reward: 1.4830 (std: 0.9923)
+   - AdaptivePavlov_random | Mean Norm. Reward: 1.3859 (std: 1.0310)
+   - Permisive_TFT_patience_10 | Mean Norm. Reward: 1.2919 (std: 1.0458)
+   - Deterministic_simpletron_optimist_TfT | Mean Norm. Reward: 0.7540 (std: 1.0213)
+   - Deterministic_simpletron_optimist_notTfT | Mean Norm. Reward: 0.5578 (std: 0.9592)
+
+Tournament [Error: 0.25 | Reps: 3]
+==================================
+   - AdaptivePavlov_deterministic | Mean Norm. Reward: 1.6178 (std: 0.9316)
+   - Permisive_TFT_patience_10 | Mean Norm. Reward: 1.3328 (std: 1.0319)
+   - AdaptivePavlov_random | Mean Norm. Reward: 1.2080 (std: 1.0826)
+   - Deterministic_simpletron_optimist_notTfT | Mean Norm. Reward: 0.7096 (std: 1.0284)
+   - Deterministic_simpletron_optimist_TfT | Mean Norm. Reward: 0.5526 (std: 0.9500)
+

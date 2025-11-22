@@ -1,0 +1,98 @@
+=== TOP 3 MODELS (NORMALIZED REWARD) ===
+
+Tournament [Error: 0.00 | Reps: 1]
+==================================
+   - Deterministic_simpletron_optimist_TfT | Mean Norm. Reward: 0.4754 (std: 0.2231)
+   - Focal5          | Mean Norm. Reward: 0.4670 (std: 0.1987)
+   - Deterministic_simpletron_optimist_notTfT | Mean Norm. Reward: 0.4453 (std: 0.2452)
+   - CastigadorInfernal | Mean Norm. Reward: 0.4286 (std: 0.2275)
+   - AdaptivePavlov_random | Mean Norm. Reward: 0.2762 (std: 0.2953)
+
+Tournament [Error: 0.00 | Reps: 3]
+==================================
+   - Deterministic_simpletron_optimist_notTfT | Mean Norm. Reward: 0.5119 (std: 0.2050)
+   - Focal5          | Mean Norm. Reward: 0.4593 (std: 0.2217)
+   - Deterministic_simpletron_optimist_TfT | Mean Norm. Reward: 0.4540 (std: 0.2410)
+   - CastigadorInfernal | Mean Norm. Reward: 0.4164 (std: 0.2382)
+   - AdaptivePavlov_random | Mean Norm. Reward: 0.2762 (std: 0.2953)
+
+Tournament [Error: 0.05 | Reps: 1]
+==================================
+   - Focal5          | Mean Norm. Reward: 0.4703 (std: 0.1750)
+   - CastigadorInfernal | Mean Norm. Reward: 0.4321 (std: 0.2150)
+   - Deterministic_simpletron_pesimist_notTfT | Mean Norm. Reward: 0.3403 (std: 0.2705)
+   - AdaptivePavlov_deterministic | Mean Norm. Reward: 0.3304 (std: 0.2844)
+   - Deterministic_simpletron_optimist_notTfT | Mean Norm. Reward: 0.3235 (std: 0.2787)
+
+Tournament [Error: 0.05 | Reps: 3]
+==================================
+   - Focal5          | Mean Norm. Reward: 0.4685 (std: 0.1770)
+   - Deterministic_simpletron_optimist_notTfT | Mean Norm. Reward: 0.4213 (std: 0.2237)
+   - CastigadorInfernal | Mean Norm. Reward: 0.4213 (std: 0.2236)
+   - AdaptivePavlov_random | Mean Norm. Reward: 0.3675 (std: 0.2714)
+   - AdaptivePavlov_random_always_coop | Mean Norm. Reward: 0.3049 (std: 0.2893)
+
+Tournament [Error: 0.10 | Reps: 1]
+==================================
+   - Focal5          | Mean Norm. Reward: 0.4699 (std: 0.1811)
+   - CastigadorInfernal | Mean Norm. Reward: 0.4333 (std: 0.2226)
+   - AdaptivePavlov_random | Mean Norm. Reward: 0.3844 (std: 0.2668)
+   - AdaptivePavlov_random_always_coop | Mean Norm. Reward: 0.3292 (std: 0.2834)
+   - Permisive_TFT_patience_10 | Mean Norm. Reward: 0.3100 (std: 0.2672)
+
+Tournament [Error: 0.10 | Reps: 3]
+==================================
+   - Focal5          | Mean Norm. Reward: 0.4697 (std: 0.1744)
+   - CastigadorInfernal | Mean Norm. Reward: 0.4382 (std: 0.2115)
+   - AdaptivePavlov_random | Mean Norm. Reward: 0.3657 (std: 0.2701)
+   - AdaptivePavlov_random_always_coop | Mean Norm. Reward: 0.3582 (std: 0.2646)
+   - Deterministic_simpletron_optimist_notTfT | Mean Norm. Reward: 0.3305 (std: 0.2846)
+
+Tournament [Error: 0.15 | Reps: 1]
+==================================
+   - Focal5          | Mean Norm. Reward: 0.4578 (std: 0.2043)
+   - CastigadorInfernal | Mean Norm. Reward: 0.4528 (std: 0.2021)
+   - AdaptivePavlov_random_always_coop | Mean Norm. Reward: 0.3872 (std: 0.2542)
+   - AdaptivePavlov_deterministic | Mean Norm. Reward: 0.3724 (std: 0.2585)
+   - Always3         | Mean Norm. Reward: 0.2849 (std: 0.3054)
+
+Tournament [Error: 0.15 | Reps: 3]
+==================================
+   - Focal5          | Mean Norm. Reward: 0.4712 (std: 0.1882)
+   - CastigadorInfernal | Mean Norm. Reward: 0.4455 (std: 0.2036)
+   - AdaptivePavlov_random_always_coop | Mean Norm. Reward: 0.3970 (std: 0.2479)
+   - AdaptivePavlov_random | Mean Norm. Reward: 0.3896 (std: 0.2558)
+   - AdaptivePavlov_deterministic | Mean Norm. Reward: 0.3430 (std: 0.2720)
+
+Tournament [Error: 0.20 | Reps: 1]
+==================================
+   - CastigadorInfernal | Mean Norm. Reward: 0.4543 (std: 0.2078)
+   - Focal5          | Mean Norm. Reward: 0.4199 (std: 0.2315)
+   - AdaptivePavlov_random_always_coop | Mean Norm. Reward: 0.3837 (std: 0.2520)
+   - AdaptivePavlov_deterministic | Mean Norm. Reward: 0.3607 (std: 0.2665)
+   - GenerousTitForTat_generous_p_0.75 | Mean Norm. Reward: 0.3165 (std: 0.2726)
+
+Tournament [Error: 0.20 | Reps: 3]
+==================================
+   - Focal5          | Mean Norm. Reward: 0.4438 (std: 0.2208)
+   - CastigadorInfernal | Mean Norm. Reward: 0.4356 (std: 0.2235)
+   - AdaptivePavlov_random_always_coop | Mean Norm. Reward: 0.4071 (std: 0.2428)
+   - AdaptivePavlov_deterministic | Mean Norm. Reward: 0.3884 (std: 0.2549)
+   - AdaptivePavlov_random | Mean Norm. Reward: 0.3675 (std: 0.2715)
+
+Tournament [Error: 0.25 | Reps: 1]
+==================================
+   - AdaptivePavlov_random_always_coop | Mean Norm. Reward: 0.4294 (std: 0.2282)
+   - AdaptivePavlov_deterministic | Mean Norm. Reward: 0.4034 (std: 0.2407)
+   - Permisive_TFT_patience_10 | Mean Norm. Reward: 0.3597 (std: 0.2657)
+   - Focal5          | Mean Norm. Reward: 0.3493 (std: 0.2776)
+   - CastigadorInfernal | Mean Norm. Reward: 0.3433 (std: 0.2724)
+
+Tournament [Error: 0.25 | Reps: 3]
+==================================
+   - CastigadorInfernal | Mean Norm. Reward: 0.4103 (std: 0.2447)
+   - AdaptivePavlov_random_always_coop | Mean Norm. Reward: 0.4068 (std: 0.2427)
+   - AdaptivePavlov_deterministic | Mean Norm. Reward: 0.3886 (std: 0.2551)
+   - GenerousTitForTat_generous_p_0.75 | Mean Norm. Reward: 0.3767 (std: 0.2615)
+   - Permisive_TFT_patience_10 | Mean Norm. Reward: 0.3754 (std: 0.2606)
+

@@ -52,9 +52,13 @@ def load_data(input_dir: Path):
             print("   -> Se asumirá valor 1.0 para evitar errores, pero el reward NO estará normalizado.")
             ranking_df[col_generations] = 1.0
         
-        # Creación de la métrica 'normalized_reward'
-        # reward / n_generations
-        ranking_df["normalized_reward"] = ranking_df["reward"] / ranking_df[col_generations]
+        # Creación de la métrica 'normalized_reward':
+        #( (reward / n_generations) / n_repetitions) /(n_jugadores - 1)
+        # Esto lo hacemos para que podamos lograr una metrica de reward representativa de un match: ignorando el numero de generaciones que ha durado la evolucion
+        # y el numero de veces que se ha repetido un match. También lo hacemos agnostico al numero de enfrentamiento que haya tenido que hacer un agente
+        n_players = len(set(ranking_df["agent_name"]))
+        ranking_df["normalized_reward"] = ((ranking_df["reward"] / ranking_df[col_generations]) / ranking_df["n_repetitions"]) / (n_players - 1)
+        print(ranking_df)
         
         print(f"✅ Datos cargados y normalizados: {len(ranking_df)} registros.")
         return ranking_df, h2h_df
@@ -69,7 +73,7 @@ def load_data(input_dir: Path):
 def plot_reward_vs_error(df: pd.DataFrame, output_dir: Path):
     """Plot 1: Reward Normalizado Medio vs Probabilidad de Error"""
     # Usamos normalized_reward
-    ranking_mean = df.groupby(["agent_name", "error_prob"])["normalized_reward"].mean().reset_index()
+    ranking_mean = df.groupby(["agent_name", "error_prob"])["normalized_reward"].median().reset_index()
     
     fig = go.Figure()
     for agent_name, group in ranking_mean.groupby("agent_name"):
@@ -91,7 +95,7 @@ def plot_reward_vs_error(df: pd.DataFrame, output_dir: Path):
 
 def plot_reward_vs_repetitions(df: pd.DataFrame, output_dir: Path):
     """Plot 2: Reward Normalizado Medio vs Número de Repeticiones"""
-    ranking_mean = df.groupby(["agent_name", "n_repetitions"])["normalized_reward"].mean().reset_index()
+    ranking_mean = df.groupby(["agent_name", "n_repetitions"])["normalized_reward"].median().reset_index()
 
     fig = go.Figure()
     for agent_name, group in ranking_mean.groupby("agent_name"):
@@ -111,7 +115,7 @@ def plot_reward_vs_repetitions(df: pd.DataFrame, output_dir: Path):
 
 def plot_reward_derivative(df: pd.DataFrame, output_dir: Path):
     """Plot 3: Velocidad de mejora del Reward Normalizado"""
-    ranking_mean = df.groupby(["agent_name", "n_repetitions"])["normalized_reward"].mean().reset_index()
+    ranking_mean = df.groupby(["agent_name", "n_repetitions"])["normalized_reward"].median().reset_index()
     
     fig = go.Figure()
     derivative_data = []
@@ -156,14 +160,14 @@ def analyze_top_performers(df: pd.DataFrame, output_dir: Path):
     # Agrupamos y calculamos estadísticas sobre normalized_reward
     grouped = (
         df.groupby(["error_prob", "n_repetitions", "agent_name"])["normalized_reward"]
-        .agg(["mean", "std", "min", "max"])
+        .agg(["mean", "std", "min", "max", "median"])
         .reset_index()
     )
 
-    def get_top3(sub_df):
-        return sub_df.sort_values("mean", ascending=False).head(3)
+    def get_top5(sub_df):
+        return sub_df.sort_values("mean", ascending=False).head(5)
 
-    best_models = grouped.groupby(["error_prob", "n_repetitions"], group_keys=False).apply(get_top3)
+    best_models = grouped.groupby(["error_prob", "n_repetitions"], group_keys=False).apply(get_top5)
     
     # 1. Guardar Excel (Cambio solicitado)
     save_excel(best_models, output_dir / "best_models_per_tournament")
@@ -185,7 +189,7 @@ def analyze_top_performers(df: pd.DataFrame, output_dir: Path):
 # BLOQUE 2: ANÁLISIS HEAD-TO-HEAD
 # =============================================================================
 
-def analyze_win_rates_and_stats(h2h_df: pd.DataFrame, output_dir: Path):
+def analyze_win_rates_and_stats(h2h_df: pd.DataFrame,ranking_df:pd.DataFrame ,  output_dir: Path):
     """Calcula Win Rates y Estadísticas. Guarda en XLSX."""
     
     # 1. Win Rates Globales
@@ -199,14 +203,8 @@ def analyze_win_rates_and_stats(h2h_df: pd.DataFrame, output_dir: Path):
     
     save_excel(win_rate_df, output_dir / "global_win_rates")
     
-    # 2. Estadísticas de Reward (NOTA: H2H suele ser reward puro del match, sin normalizar por generaciones)
-    # Si quisieras normalizar aquí, necesitarías la info de generaciones en el CSV de H2H.
-    df_long = pd.concat([
-        h2h_df[["agent_A", "reward_A"]].rename(columns={"agent_A": "agent", "reward_A": "reward"}),
-        h2h_df[["agent_B", "reward_B"]].rename(columns={"agent_B": "agent", "reward_B": "reward"})
-    ], ignore_index=True)
-    
-    stats = df_long.groupby("agent")["reward"].agg(["mean", "std", "median"]).sort_values("median", ascending=False).reset_index()
+    # 2. Estadísticas de Reward 
+    stats = ranking_df.groupby("agent_name")["normalized_reward"].agg(["mean" ,"std", "min","median", "max"]).sort_values("median", ascending=False).reset_index()
     save_excel(stats, output_dir / "global_reward_stats")
     
     print("✅ Estadísticas globales (Win Rates y Rewards) guardadas en Excel.")
@@ -268,12 +266,12 @@ def run_analysis_pipeline():
     
     print("\n--- Analizando Enfrentamientos (H2H) ---")
     if not h2h_df.empty:
-        analyze_win_rates_and_stats(h2h_df, output_dir)
+        analyze_win_rates_and_stats(h2h_df, ranking_df ,output_dir)
         plot_head_to_head_matrix(h2h_df, output_dir)
     else:
         print("⚠️ No hay datos de Head to Head disponibles.")
 
-    print(f"\n✨ Análisis completado. Resultados en: {output_dir.resolve()}")
+    print(f"\n[!] Análisis completado. Resultados en: {output_dir.resolve()}")
 
 if __name__ == "__main__":
     try:
