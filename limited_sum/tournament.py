@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 
 from .match import Match
 from .player import Player
+import pandas as pd
 
 
 class Tournament:
@@ -90,6 +91,44 @@ class Tournament:
             f"Tournament finished with {len(self.players)} players, {self.n_rounds} rounds\, \
               and {self.repetitions} repetitions per pair."
         )
+    
+    def play_trace(self) -> pd.DataFrame:
+        """
+        Plays the tournament while extracting all the information from each match.
+        
+        
+        :return: A Dataframe with all the games.
+        :rtype: pd.DataFrame
+        """
+        result_df = pd.DataFrame()
+        game_number = 1
+        self.ranking = {player: 0.0 for player in self.players}
+
+        for player_1, player_2 in itertools.combinations(self.players, 2):
+            for _ in range(self.repetitions):
+                match = Match(
+                    player_1=player_1,
+                    player_2=player_2,
+                    n_rounds=self.n_rounds,
+                    error=self.error,
+                )
+                match_result =  match.play_trace()
+                match_result["game_number"] = game_number
+                result_df = pd.concat([result_df, pd.DataFrame([match_result])], ignore_index=True)
+                score_p1, score_p2 = match.score
+
+                self.ranking[player_1] += score_p1
+                self.ranking[player_2] += score_p2
+
+                player_1.clean_history()
+                player_2.clean_history()
+                game_number += 1
+
+        print(
+            f"Tournament finished with {len(self.players)} players, {self.n_rounds} rounds\, \
+              and {self.repetitions} repetitions per pair."
+        )
+        return result_df
 
     def plot_results(self) -> None:
         """

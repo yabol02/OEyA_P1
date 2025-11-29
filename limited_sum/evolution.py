@@ -207,6 +207,93 @@ class Evolution:
         if do_plot:
             self.stackplot(self.count_evolution)
 
+    def play_trace(self) -> pd.DataFrame:
+        """
+        Simulates the full evolutionary tournament.
+
+        This method performs the evolutionary process across several generations,
+        where each generation includes all matches, ranking updates, and
+        natural selection.
+
+        Ir also returns a dataframe with all the information.
+
+        :param do_print: If True, prints intermediate results after each generation.
+        :type do_print: bool
+        :param do_plot: If True, plots the intermediate results as a stackplot.
+        :type do_plot: bool
+        :return: A pandas DataFrame containing the full trace of the evolutionary tournament.
+        :rtype: pd.DataFrame
+        """
+        self.count_evolution = {}
+        result_df = pd.DataFrame()
+
+        initial_counts = self.count_strategies()
+        for name, count in initial_counts.items():
+            self.count_evolution[name] = [count]
+
+        current_population_list = list(self.ranking.keys())
+        for generation in range(1, self.generations + 1):
+            print(f"\n--- GENERATION {generation:03d} ---")
+            game_number = 1
+            current_ranking = {player: 0.0 for player in current_population_list}
+            for player_1, player_2 in itertools.combinations(
+                current_population_list, 2
+            ):
+                for _ in range(self.repetitions):
+                    match = Match(
+                        player_1=player_1,
+                        player_2=player_2,
+                        n_rounds=self.n_rounds,
+                        error=self.error,
+                    )
+                    match_trace = match.play_trace()
+                    match_trace["generation"] = generation
+                    match_trace["game_number"] = game_number
+                    result_df = pd.concat([result_df, pd.DataFrame([match_trace])])
+                    game_number += 1
+                    score_p1, score_p2 = match.score
+                    # if do_print:
+                    #     print(f"MATCH ENDED. FINAL SCORE: P1 ({player_1.name}): {score_p1:.1f} | P2 ({player_2.name}): {score_p2:.1f}")
+                    current_ranking[player_1] += score_p1
+                    current_ranking[player_2] += score_p2
+
+                    player_1.clean_history()
+                    player_2.clean_history()
+                    winner = player_2
+                    if score_p1 > score_p2:
+                        winner = player_1
+                    new_head_to_head = {"agent_A": player_1.name, "agent_B": player_2.name, "winner": winner.name,
+                                         "reward_A":  score_p1, "reward_B": score_p2}
+                    self._head_to_head_rewards.append(new_head_to_head)
+
+            new_population_list, _ = self.natural_selection(current_ranking)
+            current_population_list = new_population_list
+
+            current_counts = {}
+            for player_instance in current_population_list:
+                name = player_instance.name
+                current_counts[name] = current_counts.get(name, 0) + 1
+
+            for name, count in current_counts.items():
+                self.count_evolution.setdefault(name, []).append(count)
+
+            for initial_player in self.players:
+                if initial_player.name not in self.count_evolution:
+                    self._count_evolution[initial_player.name] = [0] * generation
+
+           
+
+        print("\n" + "=" * 50)
+        print(f"EVOLUTIONARY TOURNAMENT FINISHED after {self.generations} generations.")
+        print("=" * 50)
+
+        self.ranking = current_ranking
+        self.update_cumulative_ranking(current_ranking)
+        # if do_plot:
+        #     self.stackplot(self.count_evolution)
+
+        return result_df
+
     def update_cumulative_ranking(self, current_ranking):
         for k,v in current_ranking.items():
             self.cumulative_ranking[k] = v

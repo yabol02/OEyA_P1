@@ -299,7 +299,7 @@ class CastigadorInfernal(Player):
         - Adjusts strategy based on opponent’s consistency.
     """
 
-    def __init__(self, game: Game, name: str = ""):
+    def __init__(self, game: Game, name: str = "Castigador Infernal"):
         """
         Initializes the CastigadorInfernal player.
 
