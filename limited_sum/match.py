@@ -1,9 +1,9 @@
 from random import random
 
+import pandas as pd
+
 from .game import ACTIONS
 from .player import Player
-
-import pandas as pd
 
 
 class Match:
@@ -11,7 +11,8 @@ class Match:
         self,
         player_1: Player,
         player_2: Player,
-        n_rounds: int = 100,
+        prob_stop: float = 0.0,
+        max_rounds: int = 100,
         error: float = 0.0,
     ):
         """
@@ -21,19 +22,17 @@ class Match:
         :type player_1: Player
         :param player_2: Second player of the match.
         :type player_2: Player
-        :param n_rounds: Number of rounds in the match. Si es 0 lanza error. Si es < 1, será una probabilidad de terminar. Si es >= 1, será el numero exacto de rondas
-        :type n_rounds: int
+        :param prob_stop: Probability of stopping the match after each round.
+        :type prob_stop: float
+        :param max_rounds: Number of max rounds in the match.
+        :type max_rounds: int
         :param error: Probability of making an error, expressed on a 0–1 scale.
         :type error: float
         """
-        assert n_rounds > 0, "'n_rounds' should be greater than 0"
+        assert max_rounds > 0, "'max_rounds' should be greater than 0"
 
-        if n_rounds < 1:
-            self._continue_playing_prob = n_rounds
-            self._playing_with_prob = True
-        else:
-            self.n_rounds = n_rounds
-            self._playing_with_prob = False
+        self.prob_stop = prob_stop
+        self.max_rounds = max_rounds
         self._round_counter = 0
         self.player_1 = player_1
         self.player_2 = player_2
@@ -60,9 +59,8 @@ class Match:
         :rtype: None
         """
         score_p1, score_p2 = 0, 0
-        do_cotinue_playing = True
 
-        while do_cotinue_playing:
+        while random() > self.prob_stop:
 
             a_p1 = self.player_1.strategy(self.player_2)
             a_p2 = self.player_2.strategy(self.player_1)
@@ -82,13 +80,11 @@ class Match:
                         | P1 Payoff: {payoff_p1}, P2 Payoff: {payoff_p2} \
                         | Total Score: ({score_p1:.1f}, {score_p2:.1f})"
                 )
-            self._round_counter -= -1
+            self._round_counter += 1
 
-            if self._playing_with_prob:
-                r_number = random()
-                do_cotinue_playing = r_number > self._continue_playing_prob
-            else:
-                do_cotinue_playing = self.n_rounds != self._round_counter
+            if self._round_counter == self.max_rounds:
+                print("Maximum number of rounds reached.")
+                break
 
         score_p1 /= self._round_counter
         score_p2 /= self._round_counter
@@ -110,6 +106,12 @@ class Match:
             print(
                 f"MATCH ENDED. FINAL SCORE: P1 ({self.player_1.name}): {self.score[0]:.1f} | P2 ({self.player_2.name}): {self.score[1]:.1f}"
             )
+            winner = (
+                self.player_1.name
+                if self.score[0] > self.score[1]
+                else self.player_2.name
+            )
+            print(f"The winner is {winner}, with a score of {max(self.score):.1f}.")
             print("-" * 60)
 
     def play_trace(self) -> dict:
@@ -125,12 +127,11 @@ class Match:
         :rtype: dict
         """
         score_p1, score_p2 = 0, 0
-        do_cotinue_playing = True
 
         player_1_payoffs = []
         player_2_payoffs = []
 
-        while do_cotinue_playing:
+        while random() > self.prob_stop:
 
             a_p1 = self.player_1.strategy(self.player_2)
             a_p2 = self.player_2.strategy(self.player_1)
@@ -148,13 +149,10 @@ class Match:
             score_p1 += payoff_p1
             score_p2 += payoff_p2
 
-            self._round_counter -= -1
+            self._round_counter += 1
 
-            if self._playing_with_prob:
-                r_number = random()
-                do_cotinue_playing = r_number > self._continue_playing_prob
-            else:
-                do_cotinue_playing = self.n_rounds != self._round_counter
+            if self._round_counter == self.max_rounds:
+                break
 
         score_p1 /= self._round_counter
         score_p2 /= self._round_counter
@@ -179,10 +177,9 @@ class Match:
             "p1_actions": self.player_1.history,
             "p2_actions": self.player_2.history,
             "p1_payoffs": player_1_payoffs,
-            "p2_payoffs": player_2_payoffs, 
+            "p2_payoffs": player_2_payoffs,
             "mean_score_p1": float(final_score_p1),
             "mean_score_p2": float(final_score_p2),
-            
         }
 
         return data

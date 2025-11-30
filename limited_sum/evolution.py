@@ -160,7 +160,7 @@ class Evolution:
                     match = Match(
                         player_1=player_1,
                         player_2=player_2,
-                        n_rounds=self.n_rounds,
+                        max_rounds=self.n_rounds,
                         error=self.error,
                     )
                     match.play(do_print=False)
