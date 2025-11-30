@@ -33,7 +33,7 @@ class Match:
 
         self.prob_stop = prob_stop
         self.max_rounds = max_rounds
-        self._round_counter = 0
+        self._round_counter = 1
         self.player_1 = player_1
         self.player_2 = player_2
         self.error = error
@@ -60,7 +60,7 @@ class Match:
         """
         score_p1, score_p2 = 0, 0
 
-        while random() > self.prob_stop:
+        while (random() > self.prob_stop) and (self._round_counter < self.max_rounds):
 
             a_p1 = self.player_1.strategy(self.player_2)
             a_p2 = self.player_2.strategy(self.player_1)
@@ -76,15 +76,14 @@ class Match:
             score_p2 += payoff_p2
             if do_print:
                 print(
-                    f"ROUND {self._round_counter+1:03d} | P1 Action: {a_p1}, P2 Action: {a_p2} \
+                    f"ROUND {self._round_counter:03d} | P1 Action: {a_p1}, P2 Action: {a_p2} \
                         | P1 Payoff: {payoff_p1}, P2 Payoff: {payoff_p2} \
                         | Total Score: ({score_p1:.1f}, {score_p2:.1f})"
                 )
             self._round_counter += 1
 
-            if self._round_counter == self.max_rounds:
-                print("Maximum number of rounds reached.")
-                break
+        if self._round_counter == self.max_rounds:
+            print("Maximum number of rounds reached.")
 
         score_p1 /= self._round_counter
         score_p2 /= self._round_counter
@@ -131,7 +130,7 @@ class Match:
         player_1_payoffs = []
         player_2_payoffs = []
 
-        while random() > self.prob_stop:
+        while (random() > self.prob_stop) and (self._round_counter < self.max_rounds):
 
             a_p1 = self.player_1.strategy(self.player_2)
             a_p2 = self.player_2.strategy(self.player_1)
@@ -150,9 +149,6 @@ class Match:
             score_p2 += payoff_p2
 
             self._round_counter += 1
-
-            if self._round_counter == self.max_rounds:
-                break
 
         score_p1 /= self._round_counter
         score_p2 /= self._round_counter

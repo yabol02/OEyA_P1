@@ -107,7 +107,7 @@ class Tournament:
         self.ranking = {player: 0.0 for player in self.players}
 
         for player_1, player_2 in itertools.combinations(self.players, 2):
-            for _ in range(self.repetitions):
+            for r in range(self.repetitions):
                 match = Match(
                     player_1=player_1,
                     player_2=player_2,
@@ -117,7 +117,7 @@ class Tournament:
                 )
                 match_result =  match.play_trace()
                 match_result["game_number"] = game_number
-                
+                match_result["repetition"] = r + 1
                 all_match_results.append(match_result)
 
                 score_p1, score_p2 = match.score
