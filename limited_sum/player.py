@@ -1119,3 +1119,43 @@ class AWSLS(Player):
             return min(5, my_last + self.delta)
         # en otros casos, bajar para evitar colapsos
         return max(0, my_last - self.delta)
+
+
+class BinarySunset(Player):
+    """
+    A player that only plays binary numbers (2, 4) and that stars more agressive (4) until the sunset where ir colaborates (2).
+    
+    """
+
+    def __init__(self, game: Game, name: str = "BinarySunset"):
+        super(BinarySunset, self).__init__(game, name)
+
+    def strategy(self, opponent: Player) -> int:
+        num_plays = len(opponent.history)
+        play = 2
+        if num_plays <= 20:
+            play = 4
+        elif num_plays <= 50:
+            if num_plays % 2 == 0:
+                play = 4
+
+        return play
+    
+
+class CopyCat(Player):
+    """
+    Childish player that copies the opponent's last move.
+    """
+
+    def __init__(self, game: Game, name: str = "CopyCat"):
+        super(CopyCat, self).__init__(game, name)
+
+    def strategy(self, opponent: Player) -> int:
+        """
+        Implements the CopyCat strategy:
+        1. In the first round, it plays 2 (cooperative move).
+        2. In subsequent rounds, it copies the opponent's last move.
+        """
+        if not opponent.history:
+            return 2
+        return opponent.history[-1]

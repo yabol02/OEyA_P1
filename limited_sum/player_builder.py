@@ -1,6 +1,6 @@
 # Importa todas las clases de agentes que quieres gestionar
-from limited_sum.player import (AdaptivePavlov, Always0, Always3,
-                                CastigadorInfernal, ContriteTitForTat,
+from limited_sum.player import (AdaptivePavlov, Always0, Always3, BinarySunset,
+                                CastigadorInfernal, ContriteTitForTat, CopyCat,
                                 Detective, Deterministic_simpletron, Focal5,
                                 Game, GenerousTitForTat, GrimTrigger,
                                 HatTricker, PermissiveTitForTat, Player,
@@ -23,6 +23,8 @@ AGENT_CLASSES = {
     "GenerousTitForTat": GenerousTitForTat,
     "GrimTrigger": GrimTrigger,
     "HatTricker": HatTricker,
+    "CopyCat": CopyCat,
+    "BinarySunset": BinarySunset,
 }
 
 # ---------------------------------------------------------------------
