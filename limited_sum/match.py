@@ -11,7 +11,7 @@ class Match:
         self,
         player_1: Player,
         player_2: Player,
-        prob_stop: float = 0.0,
+        stop_prob: float = 0.0,
         max_rounds: int = 100,
         error: float = 0.0,
     ):
@@ -22,8 +22,8 @@ class Match:
         :type player_1: Player
         :param player_2: Second player of the match.
         :type player_2: Player
-        :param prob_stop: Probability of stopping the match after each round.
-        :type prob_stop: float
+        :param stop_prob: Probability of stopping the match after each round.
+        :type stop_prob: float
         :param max_rounds: Number of max rounds in the match.
         :type max_rounds: int
         :param error: Probability of making an error, expressed on a 0–1 scale.
@@ -31,7 +31,7 @@ class Match:
         """
         assert max_rounds > 0, "'max_rounds' should be greater than 0"
 
-        self.prob_stop = prob_stop
+        self.stop_prob = stop_prob
         self.max_rounds = max_rounds
         self._round_counter = 1
         self.player_1 = player_1
@@ -60,7 +60,7 @@ class Match:
         """
         score_p1, score_p2 = 0, 0
 
-        while (random() > self.prob_stop) and (self._round_counter < self.max_rounds):
+        while (random() > self.stop_prob) and (self._round_counter < self.max_rounds):
 
             a_p1 = self.player_1.strategy(self.player_2)
             a_p2 = self.player_2.strategy(self.player_1)
@@ -82,8 +82,8 @@ class Match:
                 )
             self._round_counter += 1
 
-        if self._round_counter == self.max_rounds:
-            print("Maximum number of rounds reached.")
+        # if self._round_counter == self.max_rounds:
+        #     print("Maximum number of rounds reached.")
 
         score_p1 /= self._round_counter
         score_p2 /= self._round_counter
@@ -130,7 +130,7 @@ class Match:
         player_1_payoffs = []
         player_2_payoffs = []
 
-        while (random() > self.prob_stop) and (self._round_counter < self.max_rounds):
+        while (random() > self.stop_prob) and (self._round_counter < self.max_rounds):
 
             a_p1 = self.player_1.strategy(self.player_2)
             a_p2 = self.player_2.strategy(self.player_1)

@@ -69,14 +69,14 @@ class Evolution:
         # Durante play() se borran las claves de los agentes menos adaptados.
         # Necesitamos un ranking que no borre agentes para poder procesar sus rewards mas adelante
         self.cumulative_ranking = copy.deepcopy(self.ranking) 
-        #
+
         # Guardamos informacion tipo agente1 vs agente2 obtuvieron reward1 y reward2
         self._head_to_head_rewards = []
         self.head_to_head_rewards = None
 
     def natural_selection(
         self, result_tournament: dict[Player, float]
-    ) -> tuple[list, list]:
+    ) -> tuple[list[Player], list[float]]:
         """
         Applies the natural selection process based on tournament results.
 
@@ -192,7 +192,7 @@ class Evolution:
 
             for initial_player in self.players:
                 if initial_player.name not in self.count_evolution:
-                    self._count_evolution[initial_player.name] = [0] * generation
+                    self.count_evolution[initial_player.name] = [0] * generation
 
             if do_print:
                 print(f"\n--- GENERATION {generation:03d} ---")
@@ -279,7 +279,7 @@ class Evolution:
 
             for initial_player in self.players:
                 if initial_player.name not in self.count_evolution:
-                    self._count_evolution[initial_player.name] = [0] * generation
+                    self.count_evolution[initial_player.name] = [0] * generation
 
            
 

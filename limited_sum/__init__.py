@@ -13,25 +13,16 @@ This package provides the following main components:
 - :class:`Evolution`: Models evolutionary dynamics among strategies.
 """
 
-from .game import Game, ACTIONS, THRESHOLD
-from .player_builder import create_agent, AGENT_CLASSES, build_several_agents
-from .player import (
-    Player,
-    Always0,
-    Always3,
-    UniformRandom,
-    Focal5,
-    TitForTat,
-    CastigadorInfernal,
-    Deterministic_simpletron,
-    PermissiveTitForTat,
-    Detective, AdaptivePavlov,
-    ContriteTitForTat, GenerousTitForTat, 
-    GrimTrigger, 
-)
-from .match import Match
-from .tournament import Tournament
+from .championship import Championship
 from .evolution import Evolution
+from .game import ACTIONS, THRESHOLD, Game
+from .match import Match
+from .player import (AdaptivePavlov, Always0, Always3, CastigadorInfernal,
+                     ContriteTitForTat, Detective, Deterministic_simpletron,
+                     Focal5, GenerousTitForTat, GrimTrigger,
+                     PermissiveTitForTat, Player, TitForTat, UniformRandom)
+from .player_builder import AGENT_CLASSES, build_several_agents, create_agent
+from .tournament import Tournament
 
 __all__ = [
     "Game",

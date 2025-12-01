@@ -11,7 +11,7 @@ class Tournament:
     def __init__(
         self,
         players: tuple[Player, ...],
-        prob_stop: float = 0.0,
+        stop_prob: float = 0.0,
         max_rounds: int = 100,
         error: float = 0.0,
         repetitions: int = 1,
@@ -21,8 +21,8 @@ class Tournament:
 
         :param players: Tuple of players that will participate in the tournament.
         :type players: tuple[Player, ...]
-        :param prob_stop: Probability of stopping the match after each round in the match.
-        :type prob_stop: float
+        :param stop_prob: Probability of stopping the match after each round in the match.
+        :type stop_prob: float
         :param max_rounds: Maximum number of rounds in each match.
         :type max_rounds: int
         :param error: Probability of making an error (from 0 to 1).
@@ -31,7 +31,7 @@ class Tournament:
         :type repetitions: int
         """
         self.players = players
-        self.prob_stop = prob_stop
+        self.stop_prob = stop_prob
         self.max_rounds = max_rounds
         self.error = error
         self.repetitions = repetitions
@@ -79,7 +79,7 @@ class Tournament:
                 match = Match(
                     player_1=player_1,
                     player_2=player_2,
-                    prob_stop=self.prob_stop,
+                    stop_prob=self.stop_prob,
                     max_rounds=self.max_rounds,
                     error=self.error,
                 )
@@ -111,7 +111,7 @@ class Tournament:
                 match = Match(
                     player_1=player_1,
                     player_2=player_2,
-                    prob_stop=self.prob_stop,
+                    stop_prob=self.stop_prob,
                     max_rounds=self.max_rounds,
                     error=self.error,
                 )
