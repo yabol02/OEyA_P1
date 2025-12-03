@@ -32,7 +32,9 @@ class Championship:
         representatives: int = 5,
     ):
         self.players = players
-        assert len(players) == len(set(p.name for p in players)), "Player names must be unique !!!"
+        assert len(players) == len(
+            set(p.name for p in players)
+        ), "Player names must be unique !!!"
         # self.all_players = all_players
         self.max_rounds = max_rounds
         self.stop_prob = stop_prob
@@ -41,7 +43,7 @@ class Championship:
         # self.points_table = {}
         self.ranking = {player.name: 0 for player in players}
 
-    def play(self, do_print: bool = True):
+    def play(self, do_print: bool = False):
         self._first_phase()
         if do_print:
             self._print_ranking("First Phase")
@@ -84,12 +86,12 @@ class Championship:
             choices = [results["mean_score_p1"], results["mean_score_p2"]]
             points = np.select(conditions, choices, default=np.nan)
             points = points[~np.isnan(points)]
-            punctuations[p] = points.mean()
+            punctuations[p] = points.sum()
         punctuations = dict(
             sorted(punctuations.items(), key=lambda item: item[1], reverse=True)
         )
         return pd.DataFrame(punctuations.items(), columns=["player", "scores"])
-    
+
     def _print_ranking(self, phase_name: str):
         """
         Prints the current ranking after a tournament phase. It shows the ranking sorted by total score (dictionary value) from highest to lowest.
@@ -126,7 +128,7 @@ class Championship:
         # Instaciar nueva evolution con los jugadores "buenos"
 
         # Calcular puntuaciones y actualizar ranking
-        raise NotImplementedError
+        raise NotImplementedError("Still not implemented")
 
     def _third_phase(self):
         points = {1: 12, 2: 8, 3: 4}  # maybe change it to a list
@@ -134,4 +136,4 @@ class Championship:
         # Instaciar nueva evolution con los jugadores "buenos"
 
         # Calcular puntuaciones y actualizar ranking
-        raise NotImplementedError
+        raise NotImplementedError("Still not implemented")
