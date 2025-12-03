@@ -5,19 +5,21 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
-from .match import Match
 from .player import Player
+from .tournament import Tournament
 
 
 class Evolution:
     def __init__(
         self,
         players: tuple[Player, ...],
-        n_rounds: int = 100,
+        stop_prob: float = 0.0,
+        max_rounds: int = 100,
         error: float = 0.0,
-        repetitions: int = 2,
-        generations: int = 100,
+        repetitions: int = 1,
+        generations: int = 10,
         reproductivity: float = 0.05,
         initial_population: tuple[int, ...] | int = 100,
     ):
@@ -43,7 +45,8 @@ class Evolution:
         :type initial_population: tuple[int, ...] | int
         """
         self.players = players
-        self.n_rounds = n_rounds
+        self.stop_prob = stop_prob
+        self.max_rounds = max_rounds
         self.error = error
         self.repetitions = repetitions
         self.generations = generations
@@ -66,17 +69,16 @@ class Evolution:
             for i, player in enumerate(self.players)
             for _ in range(self.initial_population[i])
         }
-        # Durante play() se borran las claves de los agentes menos adaptados.
-        # Necesitamos un ranking que no borre agentes para poder procesar sus rewards mas adelante
-        self.cumulative_ranking = copy.deepcopy(self.ranking) 
+        # Dictionary storing the cumulative ranking across generations for processing later
+        self.cumulative_ranking = copy.deepcopy(self.ranking)
 
-        # Guardamos informacion tipo agente1 vs agente2 obtuvieron reward1 y reward2
+        # TODO: Do we need both?
         self._head_to_head_rewards = []
         self.head_to_head_rewards = None
 
     def natural_selection(
         self, result_tournament: dict[Player, float]
-    ) -> tuple[list[Player], list[float]]:
+    ) -> dict[Player, float]:
         """
         Applies the natural selection process based on tournament results.
 
@@ -86,30 +88,30 @@ class Evolution:
         :param result_tournament: Dictionary mapping players to their total scores.
         :type result_tournament: dict[Player, float]
         :return: A tuple of two lists: the new population of players and their corresponding scores.
-        :rtype: tuple[list, list]
+        :rtype: dict[Player, float]
         """
-        sorted_players = sorted(
-            result_tournament.items(), key=lambda item: item[1], reverse=True
+        sorted_players = dict(
+            sorted(result_tournament.items(), key=lambda item: item[1], reverse=True)
         )
 
-        current_population = [item[0] for item in sorted_players]
-        current_scores = [item[1] for item in sorted_players]
+        current_population, current_scores = map(
+            list, zip(*[(player, score) for player, score in sorted_players.items()])
+        )
 
-        replacements = self.repr_int
-        parents = current_population[:replacements]
-        survivors = current_population[:-replacements]
-        survivors_scores = current_scores[:-replacements]
+        parents = current_population[: self.repr_int]
+        survivors = current_population[: -self.repr_int]
+        # survivors_scores = current_scores[:-self.repr_int]
 
         offspring = []
         for parent in parents:
-            new_offspring = copy.deepcopy(parent)
-            new_offspring.clean_history()
-            offspring.append(new_offspring)
+            new_player = copy.deepcopy(parent)
+            new_player.clean_history()
+            offspring.append(new_player)
 
         new_population = survivors + offspring
         new_scores = [0] * len(new_population)
 
-        return new_population, new_scores
+        return dict(zip(new_population, new_scores))
 
     def count_strategies(self) -> dict[str, int]:
         """
@@ -121,11 +123,15 @@ class Evolution:
         :return: Dictionary mapping player strategy names to their current population count.
         :rtype: dict[str, int]
         """
-        counts = {}
+        counts = dict()
 
         for player_instance in self.ranking.keys():
             strategy_name = player_instance.name
             counts[strategy_name] = counts.get(strategy_name, 0) + 1
+
+        for initial_player in self.players:
+            if initial_player.name not in counts:
+                counts[initial_player.name] = 0
 
         return counts
 
@@ -144,167 +150,125 @@ class Evolution:
         :return: None
         :rtype: None
         """
-        self.count_evolution = {}
+        count_evolution = dict()
 
         initial_counts = self.count_strategies()
         for name, count in initial_counts.items():
-            self.count_evolution[name] = [count]
+            count_evolution[name] = [count]
 
-        current_population_list = list(self.ranking.keys())
-        for generation in range(1, self.generations + 1):
-            current_ranking = {player: 0.0 for player in current_population_list}
-            for player_1, player_2 in itertools.combinations(
-                current_population_list, 2
-            ):
-                for _ in range(self.repetitions):
-                    match = Match(
-                        player_1=player_1,
-                        player_2=player_2,
-                        max_rounds=self.n_rounds,
-                        error=self.error,
-                    )
-                    match.play(do_print=False)
-                    score_p1, score_p2 = match.score
-                    # if do_print:
-                    #     print(f"MATCH ENDED. FINAL SCORE: P1 ({player_1.name}): {score_p1:.1f} | P2 ({player_2.name}): {score_p2:.1f}")
-                    current_ranking[player_1] += score_p1
-                    current_ranking[player_2] += score_p2
+        progressbar = tqdm(
+            iterable=range(1, self.generations + 1),
+            desc="Evolution progress",
+            position=0,
+        )
+        for generation in progressbar:
+            tournament = Tournament(
+                players=list(self.ranking.keys()),
+                stop_prob=self.stop_prob,
+                max_rounds=self.max_rounds,
+                error=self.error,
+                repetitions=self.repetitions,
+            )
 
-                    player_1.clean_history()
-                    player_2.clean_history()
-                    winner = player_2
-                    if score_p1 > score_p2:
-                        winner = player_1
-                    new_head_to_head = {"agent_A": player_1.name, "agent_B": player_2.name, "winner": winner.name,
-                                         "reward_A":  score_p1, "reward_B": score_p2}
-                    self._head_to_head_rewards.append(new_head_to_head)
-
-            new_population_list, _ = self.natural_selection(current_ranking)
-            current_population_list = new_population_list
-
-            current_counts = {}
-            for player_instance in current_population_list:
-                name = player_instance.name
-                current_counts[name] = current_counts.get(name, 0) + 1
-
-            for name, count in current_counts.items():
-                self.count_evolution.setdefault(name, []).append(count)
+            tournament.play(ext_progress=True)
+            self.ranking = self.natural_selection(tournament.ranking)
+            current_counts = self.count_strategies()
 
             for initial_player in self.players:
-                if initial_player.name not in self.count_evolution:
-                    self.count_evolution[initial_player.name] = [0] * generation
+                if initial_player.name not in current_counts:
+                    count_evolution[initial_player.name] += [0]
+                else:
+                    count_evolution[initial_player.name].append(
+                        current_counts[initial_player.name]
+                    )
 
             if do_print:
-                print(f"\n--- GENERATION {generation:03d} ---")
-                print("Population count:", current_counts)
+                tqdm.write(f"\n--- GENERATION {generation:03d} ---")
+                tqdm.write(f"Population count: {current_counts}")
+
+            if len(current_counts) == 1:
+                break
 
         print("\n" + "=" * 50)
         print(f"EVOLUTIONARY TOURNAMENT FINISHED after {self.generations} generations.")
         print("=" * 50)
 
-        self.ranking = current_ranking
-        self.update_cumulative_ranking(current_ranking)
         if do_plot:
-            self.stackplot(self.count_evolution)
+            self.stackplot(count_evolution)
 
-    def play_trace(self) -> pd.DataFrame:
+    def play_trace(self, do_plot: bool = False) -> pd.DataFrame:
         """
         Simulates the full evolutionary tournament.
 
         This method performs the evolutionary process across several generations,
-        where each generation includes all matches, ranking updates, and
-        natural selection.
+        where each generation includes all matches, ranking updates, and natural selection.
 
         Ir also returns a dataframe with all the information.
 
-        :param do_print: If True, prints intermediate results after each generation.
-        :type do_print: bool
         :param do_plot: If True, plots the intermediate results as a stackplot.
         :type do_plot: bool
         :return: A pandas DataFrame containing the full trace of the evolutionary tournament.
         :rtype: pd.DataFrame
         """
-        self.count_evolution = {}
-        result_df = pd.DataFrame()
+        count_evolution = dict()
+        all_tournament_results = list()
 
         initial_counts = self.count_strategies()
         for name, count in initial_counts.items():
-            self.count_evolution[name] = [count]
+            count_evolution[name] = [count]
 
-        current_population_list = list(self.ranking.keys())
-        for generation in range(1, self.generations + 1):
-            print(f"\n--- GENERATION {generation:03d} ---")
-            game_number = 1
-            current_ranking = {player: 0.0 for player in current_population_list}
-            for player_1, player_2 in itertools.combinations(
-                current_population_list, 2
-            ):
-                for _ in range(self.repetitions):
-                    match = Match(
-                        player_1=player_1,
-                        player_2=player_2,
-                        max_rounds=self.n_rounds,
-                        error=self.error,
-                    )
-                    match_trace = match.play_trace()
-                    match_trace["generation"] = generation
-                    match_trace["game_number"] = game_number
-                    result_df = pd.concat([result_df, pd.DataFrame([match_trace])])
-                    game_number += 1
-                    score_p1, score_p2 = match.score
-                    # if do_print:
-                    #     print(f"MATCH ENDED. FINAL SCORE: P1 ({player_1.name}): {score_p1:.1f} | P2 ({player_2.name}): {score_p2:.1f}")
-                    current_ranking[player_1] += score_p1
-                    current_ranking[player_2] += score_p2
+        progressbar = tqdm(
+            iterable=range(1, self.generations + 1),
+            desc="Evolution progress",
+            position=0,
+        )
+        for generation in progressbar:
+            tournament = Tournament(
+                players=list(self.ranking.keys()),
+                stop_prob=self.stop_prob,
+                max_rounds=self.max_rounds,
+                error=self.error,
+                repetitions=self.repetitions,
+            )
 
-                    player_1.clean_history()
-                    player_2.clean_history()
-                    winner = player_2
-                    if score_p1 > score_p2:
-                        winner = player_1
-                    new_head_to_head = {"agent_A": player_1.name, "agent_B": player_2.name, "winner": winner.name,
-                                         "reward_A":  score_p1, "reward_B": score_p2}
-                    self._head_to_head_rewards.append(new_head_to_head)
-
-            new_population_list, _ = self.natural_selection(current_ranking)
-            current_population_list = new_population_list
-
-            current_counts = {}
-            for player_instance in current_population_list:
-                name = player_instance.name
-                current_counts[name] = current_counts.get(name, 0) + 1
-
-            for name, count in current_counts.items():
-                self.count_evolution.setdefault(name, []).append(count)
+            tournament_results = tournament.play_trace(ext_progress=True)
+            self.ranking = self.natural_selection(tournament.ranking)
+            current_counts = self.count_strategies()
 
             for initial_player in self.players:
-                if initial_player.name not in self.count_evolution:
-                    self.count_evolution[initial_player.name] = [0] * generation
+                if initial_player.name not in current_counts:
+                    count_evolution[initial_player.name] += [0]
+                else:
+                    count_evolution[initial_player.name].append(
+                        current_counts[initial_player.name]
+                    )
 
-           
+            tournament_results["generation"] = generation
+            all_tournament_results.append(tournament_results)
+
+            if len(current_counts) == 1:
+                break
 
         print("\n" + "=" * 50)
         print(f"EVOLUTIONARY TOURNAMENT FINISHED after {self.generations} generations.")
         print("=" * 50)
 
-        self.ranking = current_ranking
-        self.update_cumulative_ranking(current_ranking)
-        # if do_plot:
-        #     self.stackplot(self.count_evolution)
+        if do_plot:
+            self.stackplot(count_evolution)
 
-        return result_df
+        return pd.concat(all_tournament_results, ignore_index=True)
 
     def update_cumulative_ranking(self, current_ranking):
-        for k,v in current_ranking.items():
+        for k, v in current_ranking.items():
             self.cumulative_ranking[k] = v
 
     def get_head_to_head_rewards(self):
-        if 0 == len(self._head_to_head_rewards):
+        if len(self._head_to_head_rewards) == 0:
             return None
         else:
-            if self.head_to_head_rewards == None:
+            if self.head_to_head_rewards is None:
                 self.head_to_head_rewards = pd.DataFrame(self._head_to_head_rewards)
-            
+
             return self.head_to_head_rewards
 
     def stackplot(self, count_evolution: dict[str, list]) -> None:
@@ -334,7 +298,6 @@ class Evolution:
         data_to_plot = list(padded_counts.values())
         names_to_plot = list(padded_counts.keys())
 
-
         for i, name in enumerate(names_to_plot):
             plt.plot([], [], label=name, color=COLORS[i % len(COLORS)])
 
@@ -343,11 +306,13 @@ class Evolution:
             np.array(data_to_plot),
             colors=COLORS,
         )
-        
+
         plt.xlabel("Generación")
         plt.ylabel("Población Total")
-        plt.title(f"Evolución de la Población de Estrategias ({self.generations} Generaciones)")
+        plt.title(
+            f"Evolución de la Población de Estrategias ({self.generations} Generaciones)"
+        )
 
-        plt.legend(loc='upper right')
+        plt.legend(loc="upper right")
         plt.tight_layout()
         plt.show()
