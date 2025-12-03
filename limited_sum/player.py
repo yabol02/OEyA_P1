@@ -1096,7 +1096,7 @@ class AWSLS(Player):
 class BinarySunset(Player):
     """
     A player that only plays binary numbers (2, 4) and that stars more agressive (4) until the sunset where ir colaborates (2).
-    
+
     """
 
     def __init__(self, game: Game, name: str = "BinarySunset"):

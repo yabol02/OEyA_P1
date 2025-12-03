@@ -33,7 +33,7 @@ class Match:
 
         self.stop_prob = stop_prob
         self.max_rounds = max_rounds
-        self._round_counter = 1
+        self._round_counter = 0
         self.player_1 = player_1
         self.player_2 = player_2
         self.error = error
@@ -60,7 +60,7 @@ class Match:
         """
         score_p1, score_p2 = 0, 0
 
-        while (random() > self.stop_prob) and (self._round_counter < self.max_rounds):
+        while ((random() > self.stop_prob) and (self._round_counter < self.max_rounds)) or (self._round_counter == 0):
 
             a_p1 = self.player_1.strategy(self.player_2)
             a_p2 = self.player_2.strategy(self.player_1)
@@ -130,7 +130,7 @@ class Match:
         player_1_payoffs = []
         player_2_payoffs = []
 
-        while (random() > self.stop_prob) and (self._round_counter < self.max_rounds):
+        while ((random() > self.stop_prob) and (self._round_counter < self.max_rounds)) or (self._round_counter == 0):
 
             a_p1 = self.player_1.strategy(self.player_2)
             a_p2 = self.player_2.strategy(self.player_1)

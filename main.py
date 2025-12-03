@@ -31,7 +31,7 @@ d_simpletron = Deterministic_simpletron(game, "d_simpletron")
 p_tft = PermissiveTitForTat(game, "PermissiveTitForTat")
 
 # Modifica las siguientes líneas a conveniencia para llevar a cabo distintos tests
-match = Match(d_simpletron, focal5_player, prob_stop=0.01, max_rounds=400, error=0.01)
+match = Match(d_simpletron, focal5_player, stop_prob=0.01, max_rounds=400, error=0.01)
 match.play(do_print=True)
 
 # ====================== tournament.py ======================
@@ -49,7 +49,7 @@ all_players = (
 )
 
 tournament = Tournament(
-    all_players, prob_stop=0.01, max_rounds=400, error=0.01, repetitions=2
+    all_players, stop_prob=0.01, max_rounds=400, error=0.01, repetitions=2
 )
 tournament.play()
 tournament.plot_results()
@@ -59,12 +59,13 @@ game = Game()
 
 evolution = Evolution(
     all_players,
-    n_rounds=10,
+    stop_prob=0.01,
+    max_rounds=400,
     error=0.10,
-    repetitions=5,
+    repetitions=2,
     generations=25,
     reproductivity=0.2,
-    initial_population=10,
+    initial_population=100,
 )
 
 evolution.play(do_print=True, do_plot=True)
