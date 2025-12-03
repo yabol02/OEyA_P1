@@ -51,3 +51,9 @@ class Game:
         """
         res_1, res_2 = self.payoff_matrix[a_1, a_2]
         return res_1, res_2
+
+    def __repr__(self) -> str:
+        return f"Game(actions={self.actions!r}, threshold={self.threshold!r})"
+
+    def __str__(self) -> str:
+        return f"Limited-Sum Game: {len(self.actions)} actions, threshold {self.threshold}"

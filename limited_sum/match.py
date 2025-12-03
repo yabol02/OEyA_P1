@@ -179,3 +179,9 @@ class Match:
         }
 
         return data
+
+    def __repr__(self) -> str:
+        return f"Match(P1={self.player_1!r}, P2={self.player_2!r}, max_rounds={self.max_rounds!r}, stop_prob={self.stop_prob!r}, error={self.error!r})"
+
+    def __str__(self) -> str:
+        return f"Match: {self.player_1.name} vs {self.player_2.name} ({'PENDING' if self.score == (0.0, 0.0) else f'FINAL SCORE {self.score[0]:.3f}-{self.score[1]:.3f}'})"

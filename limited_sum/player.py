@@ -82,41 +82,13 @@ class Player(ABC):
         return self.game.evaluate_result(my_last_action, last_opp_action)[0]
 
     def __repr__(self) -> str:
-        """
-        Genera una representación string del objeto Player, mostrando dinámicamente
-        todos los atributos, truncando listas largas a los primeros 5 elementos.
-        """
         class_name = self.__class__.__name__
+        history_len = len(self.history)
+        return f"{class_name}(name={self.name!r}, history_len={history_len})"
 
-        # 1. Obtener todos los atributos de la instancia
-        attributes = vars(self)  # Equivale a self.__dict__
-
-        formatted_attrs = []
-
-        # 2. Iterar sobre los atributos y formatear su valor
-        for key, value in attributes.items():
-
-            # Excluir la instancia de 'game' para evitar recursión y hacer la salida más limpia
-            if key == "game":
-                formatted_value = f"<Game object: {value.__class__.__name__}>"
-
-            # Lógica para truncar listas, tuplas, o conjuntos largos
-            elif isinstance(value, (list, tuple, set)) and len(value) > 5:
-                # Mostrar los primeros 5 elementos y la longitud total
-                head = list(value)[:5]
-                # Usa '...' para indicar que hay más elementos
-                formatted_value = (
-                    f"[{', '.join(map(repr, head))}, ... ({len(value)} total)]"
-                )
-
-            # Manejo de listas/atributos pequeños o de otro tipo
-            else:
-                formatted_value = repr(value)
-
-            formatted_attrs.append(f"{key}={formatted_value}")
-
-        # 3. Construir la representación final
-        return f"<{class_name}({' '.join(formatted_attrs)})>"
+    def __str__(self) -> str:
+        class_name = self.__class__.__name__
+        return f"{self.name} ({class_name})"
 
 
 # ---------------------------------------------------------------------
@@ -1140,7 +1112,7 @@ class BinarySunset(Player):
                 play = 4
 
         return play
-    
+
 
 class CopyCat(Player):
     """
