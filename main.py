@@ -3,7 +3,8 @@
 import itertools
 
 from limited_sum import *
-from limited_sum import ACTIONS, Evolution, Game, Match, Tournament
+from limited_sum import (ACTIONS, Championship, Evolution, Game, Match,
+                         Tournament)
 
 # ====================== game.py ======================
 # Prints all possible outcomes of the limited-sum game
@@ -69,3 +70,25 @@ evolution = Evolution(
 )
 
 evolution.play(do_print=True, do_plot=True)
+
+# ====================== championship.py ======================
+from limited_sum import (AdaptivePavlov, AgenteAstuto, BinarySunset,
+                         ContriteTitForTat, CopyCat, Detective,
+                         DeterministicSimpletron, GenerousTitForTat,
+                         GrimTrigger, HatTricker, PermissiveTitForTat,
+                         Random23, WeightedRandom23, WSLS_Adapted)
+
+players = (AdaptivePavlov(game), AgenteAstuto(game), BinarySunset(game),
+                    ContriteTitForTat(game), CopyCat(game), Detective(game),
+                    DeterministicSimpletron(game), GenerousTitForTat(game),
+                    GrimTrigger(game), HatTricker(game), PermissiveTitForTat(game),
+                    Random23(game), WeightedRandom23(game), WSLS_Adapted(game))
+
+championship = Championship(
+    players=players,
+    max_rounds=400,
+    stop_prob=0.01,
+    error=0.01,
+    repetitions=2,
+)
+championship.play()
