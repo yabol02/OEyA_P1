@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from random import choice, random
+from random import choice, choices, random
 from typing import Self
 
 from .game import Game
@@ -340,7 +340,7 @@ class CastigadorInfernal(Player):
 # ---------------------------------------------------------------------
 # Basic strategies for the limited-sum game
 # ---------------------------------------------------------------------
-class Deterministic_simpletron(Player):
+class DeterministicSimpletron(Player):
     """Starts cooperating (return 2) if the player cooperates it returns the same value
     If the oponent does not cooperate, it switches the strategy from cooperating to being greedy (return 3) or
     form being greedy to cooperating"""
@@ -348,7 +348,7 @@ class Deterministic_simpletron(Player):
     def __init__(
         self,
         game: Game,
-        name: str = "",
+        name: str = "Deterministic Simpletron",
         pesimist_start: bool = False,
         tit_for_tat_punishment: bool = False,
     ):
@@ -377,7 +377,7 @@ class Deterministic_simpletron(Player):
         - Si el oponente no coopera (≥3), cambia al modo opuesto (de cooperar a castigar o viceversa).
         """
         # Inicialización básica del agente
-        super(Deterministic_simpletron, self).__init__(game, name)
+        super(DeterministicSimpletron, self).__init__(game, name)
 
         # Parámetros de configuración
         self.pesimist_start = pesimist_start
@@ -522,7 +522,7 @@ class GenerousTitForTat(Player):
 
     def __init__(
         self,
-        game: "Game",
+        game: Game,
         name: str = "Generous TFT",
         accion_cooperativa: int = 2,
         accion_castigo: int = 3,
@@ -581,7 +581,7 @@ class ContriteTitForTat(Player):
 
     def __init__(
         self,
-        game: "Game",
+        game: Game,
         name: str = "Contrite TFT",
         accion_cooperativa: int = 2,
         accion_castigo: int = 3,
@@ -622,7 +622,7 @@ class AdaptivePavlov(Player):
 
     def __init__(
         self,
-        game: "Game",
+        game: Game,
         name: str = "Adaptive Pavlov",
         accion_cooperativa: int = 2,
         accion_desercion: int = 3,
@@ -692,7 +692,7 @@ class Detective(Player):
 
     def __init__(
         self,
-        game: "Game",
+        game: Game,
         name: str = "Detective Avanzado",
         accion_cooperativa: int = 2,
         accion_castigo: int = 3,
@@ -904,9 +904,11 @@ class WeightedRandom23(Player):
     ):
         super(WeightedRandom23, self).__init__(game, name)
         self.w = w
+        assert len(w) == 2, "Weights list must have exactly two elements."
+        assert sum(w) == 1.0, "Weights must sum to 1.0."
 
     def strategy(self, opponent: Player) -> int:
-        return choice([2, 3], weights=self.w)
+        return choices([2, 3], weights=self.w)[0]
 
 
 class AgenteAstuto(Player):
@@ -1034,7 +1036,7 @@ class WSLS_Adapted(Player):
             return last_action  # stay
         else:
             # shift: intentar ajustar para evitar colapso. Si el fallo fue por suma>max -> se reduce
-            if last_action + opponent.history[-1] > self.game.max_sum:
+            if last_action + opponent.history[-1] > self.game.threshold:
                 return max(0, last_action - 1)
             else:
                 return min(5, last_action + 1)

@@ -17,10 +17,12 @@ from .championship import Championship
 from .evolution import Evolution
 from .game import ACTIONS, THRESHOLD, Game
 from .match import Match
-from .player import (AdaptivePavlov, Always0, Always3, CastigadorInfernal,
-                     ContriteTitForTat, Detective, Deterministic_simpletron,
-                     Focal5, GenerousTitForTat, GrimTrigger,
-                     PermissiveTitForTat, Player, TitForTat, UniformRandom)
+from .player import (AdaptivePavlov, AgenteAstuto, Always0, Always3,
+                     BinarySunset, CastigadorInfernal, ContriteTitForTat,
+                     CopyCat, Detective, DeterministicSimpletron, Focal5,
+                     GenerousTitForTat, GrimTrigger, HatTricker,
+                     PermissiveTitForTat, Player, Random23, TitForTat,
+                     UniformRandom, WeightedRandom23, WSLS_Adapted)
 from .player_builder import AGENT_CLASSES, build_several_agents, create_agent
 from .tournament import Tournament
 
@@ -33,7 +35,7 @@ __all__ = [
     "Focal5",
     "TitForTat",
     "CastigadorInfernal",
-    "Deterministic_simpletron",
+    "DeterministicSimpletron",
     "PermissiveTitForTat",
     "Match",
     "Tournament",
@@ -45,5 +47,13 @@ __all__ = [
     "ContriteTitForTat",
     "GenerousTitForTat",
     "GrimTrigger",
+    "HatTricker",
+    "Random23",
+    "WeightedRandom23",
+    "AgenteAstuto",
+    "WSLS_Adapted",
+    "BinarySunset",
+    "CopyCat",
+    "Championship",
     "build_several_agents"
 ]
