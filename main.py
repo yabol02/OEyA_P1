@@ -61,11 +61,11 @@ evolution = Evolution(
     all_players,
     stop_prob=0.01,
     max_rounds=400,
-    error=0.10,
+    error=0.01,
     repetitions=2,
     generations=25,
     reproductivity=0.2,
-    initial_population=100,
+    initial_population=20,
 )
 
 evolution.play(do_print=True, do_plot=True)

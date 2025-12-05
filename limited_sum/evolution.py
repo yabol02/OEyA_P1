@@ -1,6 +1,7 @@
 import copy
 import itertools
 import math
+from random import choices
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -196,6 +197,13 @@ class Evolution:
         if do_plot:
             self.stackplot(count_evolution)
 
+        players_names = {p.name: p for p in self.players}
+        self.history = {
+            players_names[name]: counts
+            for name, counts in count_evolution.items()
+            if name in players_names
+        }
+
     def play_trace(self, do_plot: bool = False) -> pd.DataFrame:
         """
         Simulates the full evolutionary tournament.
@@ -255,6 +263,8 @@ class Evolution:
 
         if do_plot:
             self.stackplot(count_evolution)
+
+        self.history = count_evolution
 
         return pd.concat(all_tournament_results, ignore_index=True)
 
@@ -316,3 +326,83 @@ class Evolution:
         plt.legend(loc="upper right")
         plt.tight_layout()
         plt.show()
+
+
+class ProportionalEvolution(Evolution):
+    def __init__(
+        self,
+        players: tuple[Player, ...],
+        stop_prob: float = 0.0,
+        max_rounds: int = 100,
+        error: float = 0.0,
+        repetitions: int = 1,
+        generations: int = 10,
+        reproductivity: float = 0.05,
+        initial_population: tuple[int, ...] | int = 100,
+    ):
+        super().__init__(
+            players,
+            stop_prob,
+            max_rounds,
+            error,
+            repetitions,
+            generations,
+            reproductivity,
+            initial_population,
+        )
+
+    def natural_selection(
+        self, result_tournament: dict[Player, float]
+    ) -> dict[Player, float]:
+        """
+        Applies the natural selection process based on tournament results. In this case, the evolution
+        is proportional to the scores obtained by each strategy in each evolutionary round.
+
+        :param result_tournament: Dictionary mapping players to their total scores.
+        :type result_tournament: dict[Player, float]
+        :return: A dictionary mapping new players to their initial scores (usually zero).
+        :rtype: dict[Player, float]
+        """
+        score_by_strategy = dict()
+        count_by_strategy = dict()
+
+        for player, score in result_tournament.items():
+            strategy_type = type(player)
+            if strategy_type not in score_by_strategy:
+                score_by_strategy[strategy_type] = 0
+                count_by_strategy[strategy_type] = 0
+            score_by_strategy[strategy_type] += score
+            count_by_strategy[strategy_type] += 1
+
+        total_score = sum(score_by_strategy.values())
+
+        new_counts = dict()
+        for strategy_type, total_strategy_score in score_by_strategy.items():
+            proportion = (
+                total_strategy_score / total_score
+                if total_score > 0
+                else 1 / len(score_by_strategy)
+            )
+            new_count = round(proportion * self.total_population)
+            new_counts[strategy_type] = new_count
+
+        new_population = []
+        for strategy_type, num_individuals in new_counts.items():
+            for _ in range(num_individuals):
+                sample_player = next(
+                    p for p in result_tournament if isinstance(p, strategy_type)
+                )
+                new_player = copy.deepcopy(sample_player)
+                new_player.clean_history()
+                new_population.append(new_player)
+
+        if len(new_population) > self.total_population:
+            new_population = new_population[: self.total_population]
+        elif len(new_population) < self.total_population:
+            deficit = self.total_population - len(new_population)
+            extra = choices(new_population, k=deficit)
+            new_population.extend(extra)
+
+        new_scores = [0] * len(new_population)
+
+        return dict(zip(new_population, new_scores))
