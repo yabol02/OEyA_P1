@@ -28,7 +28,7 @@ random_player = UniformRandom(game, "random")
 focal5_player = Focal5(game, "focal5")
 tft_player = TitForTat(game, "tft")
 c_infernal = CastigadorInfernal(game, "c_infernal")
-d_simpletron = Deterministic_simpletron(game, "d_simpletron")
+d_simpletron = DeterministicSimpletron(game, "d_simpletron")
 p_tft = PermissiveTitForTat(game, "PermissiveTitForTat")
 
 # Modifica las siguientes líneas a conveniencia para llevar a cabo distintos tests
