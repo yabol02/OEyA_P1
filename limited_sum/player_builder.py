@@ -1,7 +1,7 @@
 # Importa todas las clases de agentes que quieres gestionar
 from limited_sum.player import (AdaptivePavlov, Always0, Always3, BinarySunset,
                                 CastigadorInfernal, ContriteTitForTat, CopyCat,
-                                Detective, Deterministic_simpletron, Focal5,
+                                Detective, DeterministicSimpletron, Focal5,
                                 Game, GenerousTitForTat, GrimTrigger,
                                 HatTricker, PermissiveTitForTat, Player,
                                 TitForTat, UniformRandom)
@@ -15,7 +15,7 @@ AGENT_CLASSES = {
     "Focal5": Focal5,
     "TitForTat": TitForTat,
     "CastigadorInfernal": CastigadorInfernal,
-    "Deterministic_simpletron": Deterministic_simpletron,
+    "DeterministicSimpletron": DeterministicSimpletron,
     "PermissiveTitForTat": PermissiveTitForTat,
     "Detective": Detective,
     "AdaptivePavlov": AdaptivePavlov,
