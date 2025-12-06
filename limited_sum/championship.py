@@ -9,8 +9,6 @@ import numpy as np
 import pandas as pd
 
 from .evolution import ProportionalEvolution
-from .game import Game
-from .match import Match
 from .player import (Always0, Always3, CastigadorInfernal, Focal5, Player,
                      TitForTat, UniformRandom)
 from .tournament import Tournament
@@ -29,9 +27,9 @@ class Championship:
         stop_prob: float = 0.01,
         error: float = 0.01,
         repetitions: int = 2,
-        representativeness: int = 5,
         generations: int = 10,
         initial_population: int = 20,
+        save_results: bool = False,
     ):
         self.players = players
         assert len(players) == len(
@@ -44,6 +42,11 @@ class Championship:
         self.repetitions = repetitions
         self.generations = generations
         self.initial_population = initial_population
+        self.save_results = save_results
+        self.results_first_phase = pd.DataFrame()
+        self.results_second_phase = pd.DataFrame()
+        self.results_third_phase = pd.DataFrame()
+
         # self.points_table = {}
         self.ranking = {player.name: 0 for player in players}
 
@@ -149,6 +152,8 @@ class Championship:
 
         # Play tournament and process results
         res1 = tournament.play_trace()
+        if self.save_results:
+            self.results_first_phase = res1.copy(deep=True)
         res1 = self._sort_results(res1)
 
         # Guardar datos de la evolución TODO: no entiendo qué queremos hacer aquí
@@ -166,7 +171,11 @@ class Championship:
             generations=self.generations,
             initial_population=self.initial_population,
         )
-        evolution.play()
+        if self.save_results:
+            res2 = evolution.play_trace()
+            self.results_second_phase = res2
+        else:
+            evolution.play()
         res2 = self._process_evolution_results(evolution.history)
         self._update_ranking(res2, self.points_2nd_phase, "Second Phase (Evolution)")
 
@@ -189,7 +198,11 @@ class Championship:
             generations=self.generations,
             initial_population=self.initial_population,
         )
-        evolution.play()
+        if self.save_results:
+            res3 = evolution.play_trace()
+            self.results_third_phase = res3
+        else:
+            evolution.play()
         res3 = self._process_evolution_results(evolution.history)
         res3 = res3[res3["player"].isin(self.players)]
         self._update_ranking(res3, self.points_3rd_phase, "Third Phase (Evolution in complex environment)")
