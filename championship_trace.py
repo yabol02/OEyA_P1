@@ -49,6 +49,7 @@ championship.play()
 
 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
-championship.results_first_phase.to_csv(f"{output_folder}/{timestamp}_first_phase.csv", index=False, sep=';')
-championship.results_second_phase.to_csv(f"{output_folder}/{timestamp}_second_phase.csv", index=False, sep=';')
-championship.results_third_phase.to_csv(f"{output_folder}/{timestamp}_third_phase.csv", index=False, sep=';')
+
+championship.results_first_phase.to_parquet(f"{output_folder}/{timestamp}_first_phase.parquet", index=False)
+championship.results_second_phase.to_parquet(f"{output_folder}/{timestamp}_second_phase.parquet", index=False)
+championship.results_third_phase.to_parquet(f"{output_folder}/{timestamp}_third_phase.parquet", index=False)
