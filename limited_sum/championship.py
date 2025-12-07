@@ -29,7 +29,7 @@ class Championship:
         stop_prob: float = 0.01,
         error: float = 0.01,
         repetitions: int = 2,
-        representativeness: int = 5,
+        # representativeness: int = 5,
         generations: int = 10,
         initial_population: int = 20,
     ):
@@ -181,7 +181,7 @@ class Championship:
             CastigadorInfernal(game),
         )
         evolution = ProportionalEvolution(
-            players=self.players+complex_environment_players,
+            players=self.players + complex_environment_players,
             stop_prob=self.stop_prob,
             max_rounds=self.max_rounds,
             error=self.error,
@@ -192,7 +192,11 @@ class Championship:
         evolution.play()
         res3 = self._process_evolution_results(evolution.history)
         res3 = res3[res3["player"].isin(self.players)]
-        self._update_ranking(res3, self.points_3rd_phase, "Third Phase (Evolution in complex environment)")
+        self._update_ranking(
+            res3,
+            self.points_3rd_phase,
+            "Third Phase (Evolution in complex environment)",
+        )
 
     def _podium(self):
         print("\nFinal Ranking:")
