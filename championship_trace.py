@@ -45,11 +45,13 @@ championship = Championship(
     repetitions=2,
     save_results=True
 )
-championship.play()
+print("Starting Championship...")
+df1, df2, df3 = championship.play(return_dfs=True)
+print("Saving results...")
 
 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
 
-championship.results_first_phase.to_parquet(f"{output_folder}/{timestamp}_first_phase.parquet", index=False)
-championship.results_second_phase.to_parquet(f"{output_folder}/{timestamp}_second_phase.parquet", index=False)
-championship.results_third_phase.to_parquet(f"{output_folder}/{timestamp}_third_phase.parquet", index=False)
+df1.to_parquet(f"{output_folder}/{timestamp}_first_phase.parquet", index=False)
+df2.to_parquet(f"{output_folder}/{timestamp}_second_phase.parquet", index=False)
+df3.to_parquet(f"{output_folder}/{timestamp}_third_phase.parquet", index=False)
