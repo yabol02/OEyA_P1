@@ -1,10 +1,3 @@
-"""
-Docstring for OEyA_P1.limited_sum.final_tournament
-
-Class for playing the final tournament of the practice. This tournament will evaluate our players performance.
-
-"""
-
 import numpy as np
 import pandas as pd
 
@@ -22,30 +15,56 @@ class Championship:
     def __init__(
         self,
         players: tuple[Player, ...],
-        # all_players: tuple[Player, ...],
         max_rounds: int = 400,
         stop_prob: float = 0.01,
         error: float = 0.01,
         repetitions: int = 2,
         generations: int = 10,
         initial_population: int = 20,
-        save_results: bool = False,
     ):
+        """
+        Initializes a Championship with the given players and configuration parameters.
+
+        :param players: Tuple of Player instances participating in the championship. All names must be unique.
+        :type players: tuple[Player, ...]
+        :param max_rounds: Maximum number of rounds for each match in the tournament phases.
+        :type max_rounds: int
+        :param stop_prob: Probability of stopping a match early.
+        :type stop_prob: float
+        :param error: Noise probability applied to player actions.
+        :type error: float
+        :param repetitions: Number of repetitions for matches in the tournament phase.
+        :type repetitions: int
+        :param generations: Number of generations in evolutionary phases.
+        :type generations: int
+        :param initial_population: Initial population size in evolutionary phases.
+        :type initial_population: int
+        :param save_results: Whether to save intermediate results, currently unused.
+        :type save_results: bool
+        """
         self.players = players
         assert len(players) == len(
             set(p.name for p in players)
         ), "Player names must be unique !!!"
-        # self.all_players = all_players
         self.max_rounds = max_rounds
         self.stop_prob = stop_prob
         self.error = error
         self.repetitions = repetitions
         self.generations = generations
         self.initial_population = initial_population
-        # self.points_table = {}
         self.ranking = {player.name: 0 for player in players}
 
-    def play(self, do_print: bool = False, return_dfs = False):
+    def play(self, do_print: bool = False, return_dfs=False):
+        """
+        Executes the full championship through its three phases. Prints intermediate rankings and returns
+        raw DataFrames if requested.
+
+        :param do_print: If True, shows the ranking after each phase.
+        :type do_print: bool
+        :param return_dfs: If True, returns the raw DataFrames from each phase.
+        :type return_dfs: bool
+        :return: If return_dfs is True, a tuple (df_1, df_2, df_3) with raw data of the three phases.
+        """
         print("\n" + "=" * 32)
         print("CHAMPIONSHIP TOURNAMENT STARTING")
         print("The players are:")
@@ -93,6 +112,16 @@ class Championship:
     def _process_evolution_results(
         self, evolution_history: pd.DataFrame
     ) -> pd.DataFrame:
+        """
+        Processes the evolution history produced by an evolutionary phase. Computes for each player the
+        last generation where it had positive population and its average population across generations.
+
+        :param evolution_history: A DataFrame-like structure where each column is a player and each row
+            represents its population in a generation.
+        :type evolution_history: pd.DataFrame
+        :return: DataFrame with columns 'player' and 'score', sorted by survival depth and average score.
+        :rtype: pd.DataFrame
+        """
         data = list()
         for player, counts in evolution_history.items():
             try:
@@ -141,6 +170,9 @@ class Championship:
     def _print_ranking(self, phase_name: str):
         """
         Prints the current ranking after a tournament phase. It shows the ranking sorted by total score (dictionary value) from highest to lowest.
+
+        :param phase_name: Name of the phase just completed.
+        :type phase_name: str
         """
         print(f"\n{phase_name} completed. Current Ranking:")
         sorted_ranking = dict(
@@ -151,6 +183,14 @@ class Championship:
         print("-" * 30)
 
     def _first_phase(self, return_dfs: bool = False):
+        """
+        Runs the first phase of the championship using a standard tournament. Sorts results, updates
+        the ranking and optionally returns the raw DataFrame before processing.
+
+        :param return_dfs: If True, returns the raw tournament DataFrame.
+        :type return_dfs: bool
+        :return: The raw DataFrame with detailed results if return_dfs is True.
+        """
         tournament = Tournament(
             players=self.players,
             stop_prob=self.stop_prob,
@@ -171,6 +211,14 @@ class Championship:
             return df1
 
     def _second_phase(self, return_dfs: bool = False):
+        """
+        Runs the second phase of the championship using proportional evolution. Processes the evolutionary
+        history, updates the ranking and optionally returns the raw history DataFrame.
+
+        :param return_dfs: If True, returns the raw evolution DataFrame.
+        :type return_dfs: bool
+        :return: The raw DataFrame with detailed evolution data if return_dfs is True.
+        """
         evolution = ProportionalEvolution(
             players=self.players,
             stop_prob=self.stop_prob,
@@ -191,6 +239,15 @@ class Championship:
             return df2
 
     def _third_phase(self, return_dfs: bool = False):
+        """
+        Runs the third phase of the championship, where players evolve in a more complex environment that
+        includes additional fixed strategies. Results are filtered to include only original players before
+        updating the ranking.
+
+        :param return_dfs: If True, returns the raw evolution DataFrame.
+        :type return_dfs: bool
+        :return: The raw DataFrame with detailed evolution data if return_dfs is True.
+        """
         game = self.players[0].game
         complex_environment_players = (
             Always0(game),
@@ -215,11 +272,18 @@ class Championship:
             evolution.play()
         res3 = self._process_evolution_results(evolution.history)
         res3 = res3[res3["player"].isin(self.players)]
-        self._update_ranking(res3, self.points_3rd_phase, "Third Phase (Evolution in complex environment)")
+        self._update_ranking(
+            res3,
+            self.points_3rd_phase,
+            "Third Phase (Evolution in complex environment)",
+        )
         if return_dfs:
             return df3
 
     def _podium(self):
+        """
+        Prints the final ranking of the championship showing the total accumulated points for all players.
+        """
         print("\nFinal Ranking:")
         sorted_ranking = dict(
             sorted(self.ranking.items(), key=lambda item: item[1], reverse=True)
