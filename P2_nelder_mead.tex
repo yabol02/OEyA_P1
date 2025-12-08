@@ -39,7 +39,7 @@
             \item Se define un símplex $\mathcal{S}$ no degenerado. En un espacio $\mathbb{R}^n$, es la envolvente convexa de $n+1$ puntos no coplanares $\{x_i\}$ con $i \in [1, n+1]$. Esto implica que no todos los puntos están en un mismo hiperplano de $\mathbb{R}^n$ (p. ej. en \(\mathbb{R}^2\), que no estén alineados).
             \item Los vértices iniciales $x_1,~...,~x_{n+1}$ están ordenados de modo que $f_1 \leq f_2 \leq ... \leq f_{n+1}$, donde $f_i = f(x_i)$.
             \item Dado que se quiere minimizar $f$, $x_1$ es el mejor vértice y $x_{n+1}$ el peor.
-            \item El diámetro del símplex $\mathcal{S}$ se define como \[diam(\mathcal{S}) = \max_{1 \leq i,~j \leq n+1} \lVert x_i - x_j\rVert\]
+            \item El diámetro del símplex $\mathcal{S}$ se define como \[diam(\mathcal{S}) = \max_{\forall i \geq 1,~ \forall j \leq n+1} \lVert x_i - x_j\rVert\]
             \item En cada iteración se usan los parámetros:
             \begin{itemize}
                 \item Reflexión: $0 < \rho < \delta$ (típicamente $\rho=1$).
@@ -54,12 +54,12 @@
         
             \subsection*{PASO 1. Ordenar}
             
-            Se ordenan los vértices del símplex de menor a mayor valor de la función.
+            Se ordenan los vértices del símplex de menor a mayor valor de la \textit{función objetivo} $f$.
             
             \subsection*{PASO 2. Reflejar}
             
             \begin{enumerate}
-                \item Se calcula el \textit{centroide}: \[\hat{x}=\frac{1}{n}\sum_{i=1}^{n} x_i\]
+                \item Se calcula el \textit{centroide} de los $n$ mejores puntos: \[\hat{x}=\frac{1}{n}\sum_{i=1}^{n} x_i\]
                 \item Se calcula el \textit{punto de reflexión}: \[x_r=\hat{x} + \rho (\hat{x}-x_{n+1})\]
                 \item Si $f_1 \leq f_r < f_n$ se acepta $x_r$ y se reemplaza el peor vértice.
             \end{enumerate}
@@ -71,7 +71,7 @@
             
             \subsection*{PASO 3b. Contraer}
             
-            Si $f_r \geq f_n$ se realiza una \textit{contracción}:
+            Si $f_r \geq f_n$ se realiza una \textit{contracción} entre $x_{n+1}$ y $x_r$:
             
             \begin{enumerate}
                 \item \textit{Contracción externa} si $f_n \leq f_r < f_{n+1}$: \[ x_{ce} = \hat{x} + \gamma(x_r-\hat{x})\]
