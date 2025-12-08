@@ -1,0 +1,22 @@
+[project]
+name = "oeya-p1"
+version = "0.1.0"
+description = "Entrega de las prácticas de la asignatura Optimización Exacta y Aproximada"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "duckdb>=1.4.2",
+    "ipykernel>=7.1.0",
+    "matplotlib>=3.10.7",
+    "nnfs>=0.5.1",
+    "numpy>=2.3.5",
+    "pandas>=2.3.3",
+    "plotly>=6.5.0",
+    "polars>=1.36.0",
+    "pyarrow>=22.0.0",
+    "scikit-learn>=1.7.2",
+    "scipy>=1.16.3",
+    "seaborn>=0.13.2",
+    "tensorflow>=2.20.0",
+    "tqdm>=4.67.1",
+]
