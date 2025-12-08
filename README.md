@@ -4,6 +4,8 @@
 
   [![Python Version](https://img.shields.io/badge/Python-3.11%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
   [![Dependency Manager](https://img.shields.io/badge/uv-astral-purple?logo=python&logoColor=white)](https://docs.astral.sh/uv/)
+  [![Code Style Black](https://img.shields.io/badge/Code%20Style-Black-black)](https://github.com/psf/black)
+  [![Imports isort](https://img.shields.io/badge/Imports-isort-blue)](https://pycqa.github.io/isort/)
   [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
   [![Status](https://img.shields.io/badge/Status-En_Desarrollo-orange)]()
 
@@ -22,8 +24,6 @@
 <a id="estructura-del-proyecto"></a>
 # 📁 Estructura del proyecto
 
-<!-- └ ─ │ ├ -->
-
 ```
 .
 └── limited_sum/            # Módulo con la implementación de la P1
@@ -34,7 +34,8 @@
   │  ├── tournament.py      # Lógica del torneo todos-contra-todos
   │  ├── evolution.py       # Dinámica evolutiva
   │  └── championship.py    # Campeonato compuesto de 3 fases
-  ├── P1_main.py            # Código para ejecutar la P1
+  ├── P1_main.py            # Enseña el uso de las clases definidas en la P1
+  ├── P1_championship.py    # Entorno de pruebas del campeonato
   ├── P2_enunciado.ipynb    # Enunciado e implementación de la P2
   ├── P2_nelder_mead.pdf    # Explicación del algoritmo del ejercicio 6 de la P2
   ├── P2_nelder_mead.py     # Diseño de las clases del ejercicio 6 de la P2
