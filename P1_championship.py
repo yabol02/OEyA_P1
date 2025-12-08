@@ -26,17 +26,36 @@ output_folder = args.output_folder
 game = Game()
 
 # ====================== championship.py ======================
-from limited_sum import (AdaptivePavlov, AgenteAstuto, BinarySunset,
-                         ContriteTitForTat, CopyCat, Detective,
-                         DeterministicSimpletron, GenerousTitForTat,
+from limited_sum import (LOLA, WSLS, AdaptiveAspiration, AdaptivePavlov,
+                         BinarySunset, CleverAgent, ContriteTitForTat, CopyCat,
+                         DeterministicSimpletron, Enforcer, Fictitious,
+                         FictitiousSoftmax, GenerousTitForTat, GreedyBayes,
                          GrimTrigger, HatTricker, PermissiveTitForTat,
-                         Random23, WeightedRandom23, WSLS_Adapted)
+                         Random23, StrongAWSLS, WeightedRandom23, ZDExtortion)
 
-players = (AdaptivePavlov(game), AgenteAstuto(game), BinarySunset(game),
-                    ContriteTitForTat(game), CopyCat(game), Detective(game),
-                    DeterministicSimpletron(game), GenerousTitForTat(game),
-                    GrimTrigger(game), HatTricker(game), PermissiveTitForTat(game),
-                    Random23(game), WeightedRandom23(game), WSLS_Adapted(game))
+players = (
+    StrongAWSLS(game),
+    AdaptivePavlov(game),
+    CleverAgent(game),
+    BinarySunset(game),
+    ContriteTitForTat(game),
+    CopyCat(game),
+    DeterministicSimpletron(game),
+    GenerousTitForTat(game),
+    GrimTrigger(game),
+    HatTricker(game),
+    PermissiveTitForTat(game),
+    Random23(game),
+    WeightedRandom23(game),
+    WSLS(game),
+    FictitiousSoftmax(game, tau=0.25),
+    GreedyBayes(game),
+    # Fictitious(game),
+    AdaptiveAspiration(game),
+    Enforcer(game),
+    ZDExtortion(game),
+    LOLA(game),
+)
 
 championship = Championship(
     players=players,
@@ -44,9 +63,8 @@ championship = Championship(
     stop_prob=0.01,
     error=0.01,
     repetitions=2,
-    generations=15,
+    generations=10,
     initial_population=len(players)*3,
-    save_results=True
 )
 print("Starting Championship...")
 df1, df2, df3 = championship.play(return_dfs=True)

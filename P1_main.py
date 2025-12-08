@@ -12,7 +12,7 @@ game = Game()
 possible_actions = ACTIONS
 for a1, a2 in itertools.product(possible_actions, repeat=2):
     print(f"{(a1, a2)} -> {game.evaluate_result(a1, a2)}")
-print("\n ================ \n")
+print("\n\n")
 # Output:
 # (0, 0) -> (0, 0)
 # (0, 1) -> (0, 1)
@@ -72,17 +72,23 @@ evolution = Evolution(
 evolution.play(do_print=True, do_plot=True)
 
 # ====================== championship.py ======================
-from limited_sum import (AdaptivePavlov, AgenteAstuto, BinarySunset,
-                         ContriteTitForTat, CopyCat, Detective,
-                         DeterministicSimpletron, GenerousTitForTat,
-                         GrimTrigger, HatTricker, PermissiveTitForTat,
-                         Random23, WeightedRandom23, WSLS_Adapted)
+from limited_sum import (AdaptivePavlov, BinarySunset, CleverAgent, CopyCat,
+                         DeterministicSimpletron, Enforcer, FictitiousSoftmax,
+                         GenerousTitForTat, GrimTrigger, HatTricker,
+                         PermissiveTitForTat, StrongAWSLS)
 
-players = (AdaptivePavlov(game), AgenteAstuto(game), BinarySunset(game),
-                    ContriteTitForTat(game), CopyCat(game), Detective(game),
-                    DeterministicSimpletron(game), GenerousTitForTat(game),
-                    GrimTrigger(game), HatTricker(game), PermissiveTitForTat(game),
-                    Random23(game), WeightedRandom23(game), WSLS_Adapted(game))
+players = (
+    StrongAWSLS(game),
+    AdaptivePavlov(game),
+    CleverAgent(game),
+    BinarySunset(game),
+    CopyCat(game),
+    GenerousTitForTat(game),
+    GrimTrigger(game),
+    HatTricker(game),
+    FictitiousSoftmax(game, tau=0.25),
+    Enforcer(game),
+)
 
 championship = Championship(
     players=players,
@@ -90,5 +96,6 @@ championship = Championship(
     stop_prob=0.01,
     error=0.01,
     repetitions=2,
+    initial_population=len(players) * 3,
 )
-championship.play()
+championship.play(do_print=True)

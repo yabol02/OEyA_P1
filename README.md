@@ -34,6 +34,9 @@
   │  ├── tournament.py      # Lógica del torneo todos-contra-todos
   │  ├── evolution.py       # Dinámica evolutiva
   │  └── championship.py    # Campeonato compuesto de 3 fases
+└── discarded/              # Directorio con ideas y evolutivos descartados durante la práctica
+  │  └── ...
+  ├── README.md             # Contiene la explicación del repositorio
   ├── P1_main.py            # Enseña el uso de las clases definidas en la P1
   ├── P1_championship.py    # Entorno de pruebas del campeonato
   ├── P2_enunciado.ipynb    # Enunciado e implementación de la P2
@@ -41,12 +44,50 @@
   ├── P2_nelder_mead.py     # Diseño de las clases del ejercicio 6 de la P2
   ├── P2_nelder_mead.ipynb  # Implementación de ejemplo del ejercicio 6 de la P2
   ├── P3_enunciado.ipynb    # Enunciado e implementación de la P3
-  └── ...
+  └── ...                   # Resto de ficheros no evaluables
 
 ```
 
+<a id="empezando"></a>
+# 🔥 Empezando
 
-# Práctica 1 - Juego de coordinación multi-acción (JCMA)
+Sigue estos pasos para levantar el entorno de desarrollo localmente.
+
+### Requisitos previos
+
+Este proyecto ha sido desarrollado usando **Python (>3.11)**.
+
+> [!IMPORTANT]
+> Para la gestión de dependencias y entornos virtuales se utiliza **[uv](https://docs.astral.sh/uv/)**, un gestor de paquetes extremadamente rápido escrito en Rust.
+> 
+> Si no dispones de `uv`, instálalo ejecutando:
+> ```bash
+> # En macOS/Linux
+> curl -LsSf https://astral.sh/uv/install.sh | sh
+>
+> # En Windows
+> powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+> ```
+
+### Instalación
+
+Una vez instalado `uv`, la configuración es automática. Desde la raíz del repositorio:
+
+1. Clona el repositorio:
+   ```bash
+   git clone https://github.com/yabol02/practica_biocomp.git
+   ```
+
+2. Sincroniza el entorno:
+    ```bash
+    uv sync
+    ```
+    Este comando creará el virtual environment (`.venv`) e instalará todas las librerías exactas definidas en el `uv.lock`.
+
+
+<p align="right">(<a href="#readme-top">Volver arriba</a>)</p>
+
+# 🫱🏼‍🫲🏼 Práctica 1 - Juego de coordinación multi-acción (JCMA)
 
 ## Introducción
 
@@ -193,20 +234,17 @@ py .\P1_championship.py ".\results\championship"
 
 Este fichero almacena los resultados en crudo en ficheros *Parquet*, los cuales se pueden procesasr con el Notebook [analysis.ipynb](./notebooks/analysis.ipynb). Este Notebook lee los datos y los procesa para analizar los resultados y así poder elegir la mejor estrategia para el juego.
 
-# Práctica 2 - Métodos de optimización de funciones
-> [!WARNING]
-> Queda completar esta sección
+# 📈 Práctica 2 - Métodos de optimización de funciones
+La P2 se compone de varios ficheros. El primero y más importante es [P2_enunciado.ipynb](P2_enunciado.ipynb), que contiene la solución de los ejercicios de optimización con restricciones. Dado que el ejercicio 6 consiste en describir un algorimto de optimización, se ha separado todo su desarrollo y explicación en varios ficheros adicionales:
+- [P2_nelder_mead.pdf](P2_nelder_mead.pdf): contiene la explicación paso a paso del algoritmo en una carilla A4.
+- [P2_nelder_mead.py](P2_nelder_mead.py): contiene el código del algoritmo. Este fichero se puede ejecutar para ver cómo optimiza diversas funciones: [Rosenbrock](https://es.wikipedia.org/wiki/Funci%C3%B3n_de_Rosenbrock), [Sphere de N dimensiones](https://es.wikipedia.org/wiki/N-esfera) y la función [Himmelblau](https://es.wikipedia.org/wiki/Funci%C3%B3n_de_Himmelblau). Muestra tanto el resultado final como el paso a paso (de las funciones donde exista la posibilidad).
+- [P2_nelder_mead.ipynb](P2_nelder_mead.ipynb): notebook con distintas funciones típicas a optimizar, la explicación del algoritmo y la posibilidad de emplear el código anterior para optimizar las funciones.
 
-# Práctica 3 - Redes Neuronales Artificiales desde 0
-> [!WARNING]
-> Queda completar esta sección
+# 🧠 Práctica 3 - Redes Neuronales Artificiales desde 0
+La P3 se corresponde a un único Notebook ([P3_enunciado.ipynb](P3_enunciado.ipynb)) con la creación paso a paso de un [perceptrón multicapa](https://es.wikipedia.org/wiki/Perceptr%C3%B3n). 
 
-# Para ejecutar tests
-```python
-python -m unittest discover -s tests -v
-```
 
-# Problemas con ficheros grandes
+# ⚠️ Problemas con ficheros grandes
 Debido a que los ficheros que resultan de ejecutar evoluciones grandes tienen mucho peso, se ha usado lfs (Github large file storage) para almacenarlos.
 Si se está usando la terminal para actualizar el proyecto, es probable que no aparezca la ayuda de github para sincronizar el proyecto con lfs.
 En ese caso ficheros como *best_models_for_tournament_type.csv* pueden aparecer de la siguiente manera
