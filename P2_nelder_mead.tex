@@ -1,0 +1,122 @@
+\documentclass[a4paper, 9pt]{article}
+
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+\usepackage[a4paper,top=2cm,bottom=2cm,left=1.65cm,right=1.65cm,marginparwidth=1.75cm]{geometry}
+\usepackage{multicol}
+\usepackage{titling}
+\usepackage{parskip}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{float}
+\usepackage{titlesec}
+
+\setlength{\columnsep}{0.8cm}
+\setlength{\droptitle}{-3cm}
+\titlelabel{\thetitle.\hspace{0.5em}}
+\titlespacing{\section}{-0.6pt}{1ex}{0ex}  % {tipo_seccion}{espacio_izq}{espacio_vert_arriba}{espacio_vert_debajo}
+\titlespacing{\subsection}{-0.3pt}{0ex}{-1ex}
+
+
+\pagestyle{empty}
+\title{Optimización con Nelder-Mead}
+\author{Rodrigo Aguirrerabiria - Yago Boleas - Adrian Estoquera}
+
+\begin{document}
+
+    \maketitle \thispagestyle{empty}
+    
+    \begin{multicols}{2}
+    
+        \section{Definiciones}
+        
+        \begin{itemize}
+            \item Se parte de un espacio de $n$ dimensiones: \(\mathbb{R}^n\).
+            \item Se define un símplex $\mathcal{S}$ no degenerado. En un espacio $\mathbb{R}^n$, es la envolvente convexa de $n+1$ puntos no coplanares $\{x_i\}$ con $i \in [1, n+1]$. Esto implica que no todos los puntos están en un mismo hiperplano de $\mathbb{R}^n$ (p. ej. en \(\mathbb{R}^2\), que no estén alineados).
+            \item Los vértices iniciales $x_1,~...,~x_{n+1}$ están ordenados de modo que $f_1 \leq f_2 \leq ... \leq f_{n+1}$, donde $f_i = f(x_i)$.
+            \item Dado que se quiere minimizar $f$, $x_1$ es el mejor vértice y $x_{n+1}$ el peor.
+            \item El diámetro del símplex $\mathcal{S}$ se define como \[diam(\mathcal{S}) = \max_{1 \leq i,~j \leq n+1} \lVert x_i - x_j\rVert\]
+            \item En cada iteración se usan los parámetros:
+            \begin{itemize}
+                \item Reflexión: $0 < \rho < \delta$ (típicamente $\rho=1$).
+                \item Expansión: $\delta > 1$ (típicamente $\delta=2$).
+                \item Contracción: $0 < \gamma < 1$ (típicamente $\gamma=\tfrac{1}{2} $).
+                \item Reducción $0 < \sigma < 1$ (típicamente $\sigma=\tfrac{1}{2}$).
+            \end{itemize}  
+        \end{itemize}
+        
+        
+        \section{Paso a paso del algoritmo}
+        
+            \subsection*{PASO 1. Ordenar}
+            
+            Se ordenan los vértices del símplex de menor a mayor valor de la función.
+            
+            \subsection*{PASO 2. Reflejar}
+            
+            \begin{enumerate}
+                \item Se calcula el \textit{centroide}: \[\hat{x}=\frac{1}{n}\sum_{i=1}^{n} x_i\]
+                \item Se calcula el \textit{punto de reflexión}: \[x_r=\hat{x} + \rho (\hat{x}-x_{n+1})\]
+                \item Si $f_1 \leq f_r < f_n$ se acepta $x_r$ y se reemplaza el peor vértice.
+            \end{enumerate}
+            
+            \subsection*{PASO 3a. Expandir}
+            
+            Si $f_r < f_1$ se calcula el \textit{punto de expansión}  \[x_e=\hat{x} + \delta(x_r-\hat{x})\]
+            y se compara $f_e$ con $f_r$, donde se acepta el mejor.
+            
+            \subsection*{PASO 3b. Contraer}
+            
+            Si $f_r \geq f_n$ se realiza una \textit{contracción}:
+            
+            \begin{enumerate}
+                \item \textit{Contracción externa} si $f_n \leq f_r < f_{n+1}$: \[ x_{ce} = \hat{x} + \gamma(x_r-\hat{x})\]
+                \item \textit{Contracción interna} si $f_r \geq f_{n+1}$: \[x_{ci} = \hat{x} - \gamma(\hat{x}-x_{n+1})\]
+            \end{enumerate}
+            
+            \subsection*{PASO 4. Encoger}
+            
+            Se evalúan de nuevo todos los puntos  \[y_i = x_1 + \sigma(x_i - x_1),~~~~i = 2,\ldots,n+1\]
+        
+        
+        \section{Condiciones de parada}
+        
+        \begin{itemize}
+            \item Cuando el diámetro del simplex es menor que \[diam(\mathcal{S})<\varepsilon_1\]
+            \item Cuando la variación de los valores de la función sea \(\max_i f_i - \min_i f_i < \varepsilon_2\).
+            \item Cuando se alcance un número máximo de iteraciones.
+        \end{itemize}
+        
+        
+        \section{Inicialización del símplex inicial}
+        
+        \begin{itemize}
+            \item Evitar símplex degenerados (malas configuraciones sin volumen).
+            \item Ajustar la escala a la magnitud de las variables.
+            \item Elegir un tamaño inicial razonable: suficientemente grande para explorar pero no excesivo.
+        \end{itemize}
+        
+        
+        \section{Propiedades y advertencias}
+        
+        \begin{itemize}
+            \item El método no necesita gradientes y se basa en transformaciones geométricas del símplex.
+            \item La carga computacional está dominada por las evaluaciones de la función objetivo.
+            \item Valores grandes de $\delta$ producen expansiones fuertes. Valores pequeños de $\gamma$ generan contracciones suaves.
+            \item El método \textbf{no garantiza convergencia global}.
+            \item Es \textbf{robusto ante funciones no suaves} pero puede comportarse de modo irregular si hay ruido.
+        \end{itemize}
+        
+        \section{Interpretación geométrica}
+
+        Este algoritmo busca un \textbf{mínimo local} ajustando \textbf{iterativamente} la forma y posición del símplex $\mathcal{S}$ en el espacio de optimización, operando exclusivamente con los valores de la función \textbf{sin usar ninguna información derivada} (gradientes). 
+        
+        Este ajuste se logra mediante transformaciones clave: una \textbf{expansión} del símplex tras una \textbf{reflexión} satisfactoria, o una \textbf{contracción} después de una reflexión que no consigue mejorar el punto de partida, lo que le permite al símplex adaptarse dinámicamente al contorno de la función objetivo.
+        
+    \end{multicols}
+
+\end{document}
