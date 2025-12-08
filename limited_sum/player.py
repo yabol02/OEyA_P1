@@ -1033,6 +1033,43 @@ class CopyCat(Player):
         return opponent.history[-1]
 
 
+class Fictitious(Player):
+    """
+    Assumes the opponent plays according to a stationary probability distribution based on their historical frequency.
+    It chooses the best response to that distribution.
+    """
+
+    def __init__(self, game, name="Fictitious"):
+        super().__init__(game, name)
+
+    def strategy(self, opponent: Self) -> int:
+        if not opponent.history:
+            return choice([2, 3])
+
+        opp_history = opponent.history
+        total_rounds = len(opp_history)
+        counts = Counter(opp_history)
+
+        best_action = 0
+        max_ev = -1.0
+
+        for my_act in self.game.actions:
+            ev = 0.0
+            for opp_act, count in counts.items():
+                prob = count / total_rounds
+                payoff, _ = self.game.evaluate_result(my_act, opp_act)
+                ev += prob * payoff
+
+            if ev > max_ev:
+                max_ev = ev
+                best_action = my_act
+            elif ev == max_ev:
+                if random() < 0.5:
+                    best_action = my_act
+
+        return best_action
+
+
 class FictitiousSoftmax(Player):
     """
     Fictitious Player with softmax action selection.
@@ -1164,43 +1201,6 @@ class GreedyBayes(Player):
 
         # Break ties uniformly
         return choice(best_actions)
-
-
-class FictitiousPlay(Player):
-    """
-    Assumes the opponent plays according to a stationary probability distribution based on their historical frequency.
-    It chooses the best response to that distribution.
-    """
-
-    def __init__(self, game, name="FictitiousPlay"):
-        super().__init__(game, name)
-
-    def strategy(self, opponent: Self) -> int:
-        if not opponent.history:
-            return choice([2, 3])
-
-        opp_history = opponent.history
-        total_rounds = len(opp_history)
-        counts = Counter(opp_history)
-
-        best_action = 0
-        max_ev = -1.0
-
-        for my_act in self.game.actions:
-            ev = 0.0
-            for opp_act, count in counts.items():
-                prob = count / total_rounds
-                payoff, _ = self.game.evaluate_result(my_act, opp_act)
-                ev += prob * payoff
-
-            if ev > max_ev:
-                max_ev = ev
-                best_action = my_act
-            elif ev == max_ev:
-                if random() < 0.5:
-                    best_action = my_act
-
-        return best_action
 
 
 class AdaptiveAspiration(Player):
