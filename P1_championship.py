@@ -5,6 +5,7 @@ from limited_sum import *
 from limited_sum import (ACTIONS, Championship, Evolution, Game, Match,
                          Tournament)
 
+
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Run the Championship with specified output folder.")
     parser.add_argument(
@@ -43,6 +44,8 @@ championship = Championship(
     stop_prob=0.01,
     error=0.01,
     repetitions=2,
+    generations=15,
+    initial_population=len(players)*3,
     save_results=True
 )
 print("Starting Championship...")
