@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from math import exp
+from collections import Counter, defaultdict
+from math import exp, inf
 from random import choice, choices, random
 from typing import Self
 
@@ -27,10 +28,7 @@ class Player(ABC):
         """
         self.name = name
         self.game = game
-
-        # Main variable of this class that tores the full history of actions performed by the player.
-        # Example: [0, 1, 2, 3] → in the first round the player chose 0, in the second round 1, and so on.
-        self.history = []
+        self.history = list()
 
     @abstractmethod
     def strategy(self, opponent: Self) -> int:
@@ -337,9 +335,10 @@ class CastigadorInfernal(Player):
 
 # Basic but "intelligent" implementations
 class DeterministicSimpletron(Player):
-    """Starts cooperating (return 2) if the player cooperates it returns the same value
-    If the oponent does not cooperate, it switches the strategy from cooperating to being greedy (return 3) or
-    form being greedy to cooperating"""
+    """
+    Starts cooperating (return 2) if the player cooperates it returns the same value.
+    If the oponent does not cooperate, it switches the strategy from cooperating to being greedy (return 3) or from being greedy to cooperating
+    """
 
     def __init__(
         self,
@@ -348,77 +347,46 @@ class DeterministicSimpletron(Player):
         pesimist_start: bool = False,
         tit_for_tat_punishment: bool = False,
     ):
-        """
-        Inicializa un agente basado en la estrategia SIMPLETON determinista.
-
-        Parámetros
-        ----------
-        game : Game
-            Objeto del juego al que pertenece el agente.
-        name : str, opcional
-            Nombre del agente (por defecto una cadena vacía).
-        pesimist_start : bool, opcional
-            Indica si el agente debe comenzar con una jugada 'greedy' (3) o 'amigable' (2):
-            - False → comienza cooperando (valor 2).
-            - True  → comienza siendo greedy (valor 3).
-        tit_for_tat_punishment : bool, opcional
-            Controla el tipo de castigo cuando el oponente es greedy (≥3):
-            - False → castigo básico: siempre responde con 3.
-            - True  → castigo tipo "tit-for-tat": replica la última acción del oponente.
-
-        Notas
-        -----
-        El agente sigue la lógica del método SIMPLETON:
-        - Si el oponente coopera (<3), repite su último movimiento.
-        - Si el oponente no coopera (≥3), cambia al modo opuesto (de cooperar a castigar o viceversa).
-        """
-        # Inicialización básica del agente
+        # Basic initialization of the agent
         super(DeterministicSimpletron, self).__init__(game, name)
 
-        # Parámetros de configuración
+        # Configuration parameters
         self.pesimist_start = pesimist_start
         self.tit_for_tat_punishmnet = tit_for_tat_punishment
 
-        # Bandera interna para saber si el agente está en modo "castigo"
-        # (True = aplicar castigo; False = comportamiento normal)
+        # Internal flag to know if the agent is in "punishment" mode (True = apply punishment; False = normal behavior)
         self.do_punish = False
 
     def strategy(self, opponent: Player) -> int:
         if len(self.history) == 0:
-            # Comienza el juego
             if self.pesimist_start:
                 return 3
             else:
                 return 2
-        # Rondas sucesivas
-        # Comprobamos que el contrincante sea greedy
+
+        # Check if the opponent is greedy
         last_opponent_action = opponent.history[-1]
         if last_opponent_action >= 3:
-            # El contrincante es greedy y cambiamos de modo
+            # The opponent is greedy, switch mode
             self.do_punish = not (self.do_punish)
 
         if self.do_punish:
-            # Vamos punishear
             if self.tit_for_tat_punishmnet:
                 return last_opponent_action
             else:
-                return 3  # Basico
+                return 3
         else:
-            # Comportamiento basico: devolver nuestra ultima opcion opcion sea cual sea
             return self.history[-1]
 
 
 class PermissiveTitForTat(Player):
     """
-    Estrategia Tit-for-Tat permisiva con un atributo de 'paciencia'.
-    La paciencia se reduce si el oponente elige una acción >= 3 y se resetea
-    si elige una acción < 3.
+    Permissive Tit-for-Tat strategy with a 'patience' attribute.
+    Patience decreases if the opponent chooses an action >= 3 and resets if they choose an action < 3.
     """
 
-    INITIAL_ACTION = 3  # JEJE somos malos
+    INITIAL_ACTION = 3
     COOPERATIVE_ACTION = 2
-
-    # Define la paciencia inicial o máxima
     INITIAL_PATIENCE = 3
 
     def __init__(
@@ -427,51 +395,27 @@ class PermissiveTitForTat(Player):
         name: str = "Permissive Tit for Tat",
         initial_patience: int = 3,
     ):
-        """
-        Inicializa el jugador PermissiveTitForTat.
-
-        :param game: El juego que se está jugando.
-        :type game: Game
-        :param name: Nombre opcional de la estrategia.
-        :type name: str
-        :param initial_patience: El valor inicial del atributo de paciencia.
-        :type initial_patience: int
-        """
         super(PermissiveTitForTat, self).__init__(game, name)
-        # Atributo para controlar la paciencia.
         self.patience = initial_patience
         self.INITIAL_PATIENCE = initial_patience
 
     def strategy(self, opponent: Player) -> int:
-        """
-        Implementa la lógica de la estrategia:
-        1. Responde a la última acción del oponente (como Tit for Tat).
-        2. Ajusta la paciencia según la última acción del oponente.
-
-        :param opponent: El jugador oponente.
-        :type opponent: Player
-        :return: La acción elegida (0 a 5).
-        :rtype: int
-        """
         if not opponent.history:
-            # Si no hay historia, comienza con la acción cooperativa
+            # If no history, start with the cooperative action
             return self.INITIAL_ACTION
 
         last_opponent_action = opponent.history[-1]
 
-        # --- Lógica de ajuste de la paciencia ---
+        # Patience adjustment logic
 
         if last_opponent_action >= 3:
-            # Si el oponente es 'codicioso' (elige 3 o más), reduce la paciencia
+            # If the opponent is 'greedy' (chooses 3 or more), decrease patience
             self.patience = max(0, self.patience - 1)
         elif last_opponent_action < 3:
-            # Si el oponente elige algo menor a 3, resetea la paciencia
+            # If the opponent chooses less than 3, reset patience
             self.patience = self.INITIAL_PATIENCE
 
-        # --- Lógica de la acción ---
-
-        # Elige la acción en función de la última acción del oponente si la paciencia es 0
-        # (comportamiento base de Tit-for-Tat)
+        # Action logic
         if self.patience == 0:
             return last_opponent_action
         else:
@@ -479,41 +423,42 @@ class PermissiveTitForTat(Player):
 
 
 class GrimTrigger(Player):
+    """
+    Grim Trigger strategy: Cooperate until the opponent defects once, then punish forever.
+    """
+
     COOPERATIVE_ACTION = 2
-    PUNISHMENT_ACTION = 3  # La deserción más leve
+    PUNISHMENT_ACTION = 3  # The most mild defection
 
     def __init__(self, game: Game, name: str = "Grim Trigger"):
         super(GrimTrigger, self).__init__(game, name)
-        self.triggered = False  # Estado de castigo
+        self.triggered = False  # Punishment state
 
     def strategy(self, opponent: Player) -> int:
-        # Si ya estamos en modo castigo, castigar para siempre.
+        # If already in punishment mode, punish forever.
         if self.triggered:
             return self.PUNISHMENT_ACTION
 
-        # Revisar el historial del oponente por cualquier deserción pasada
+        # Check the opponent's history for any past defections
         if not opponent.history:
-            return self.COOPERATIVE_ACTION  # Cooperar en la primera ronda
+            return self.COOPERATIVE_ACTION  # Cooperate in the first round
 
-        # Si el oponente desertó en la última ronda (o cualquier ronda anterior)
-        # Nota: una versión más estricta revisaría todo el 'opponent.history'
+        # If the opponent defected in the last round (or any previous round)
         if opponent.history[-1] > self.COOPERATIVE_ACTION:
             self.triggered = True
             return self.PUNISHMENT_ACTION
 
-        # Si no hay traición, seguir cooperando
+        # If no betrayal, continue cooperating
         return self.COOPERATIVE_ACTION
 
 
 class GenerousTitForTat(Player):
     """
-    Estrategia Tit-for-Tat Generoso (GTFT).
+    Generous Tit-for-Tat (GTFT) strategy.
 
-    Sigue la lógica de TFT (cooperar si el oponente cooperó, castigar si desertó),
-    pero con una probabilidad 'prob_generosidad', perdona una deserción
-    del oponente y coopera de todos modos.
-
-    Esto es crucial para romper ciclos de castigo mutuo iniciados por un error (ruido).
+    Follows the logic of TFT (cooperate if the opponent cooperated, punish if they defected),
+    but with a probability 'generosity_prob', forgives an opponent's defection and cooperates anyway.
+    This is crucial to break mutual punishment cycles initiated by an error (noise).
     """
 
     def __init__(
@@ -524,52 +469,40 @@ class GenerousTitForTat(Player):
         accion_castigo: int = 3,
         prob_generosidad: float = 0.1,
     ):
-        """
-        Constructor configurable.
 
-        :param accion_cooperativa: La acción a tomar para cooperar (default: 2).
-        :param accion_castigo: La acción a tomar para castigar (default: 3).
-        :param prob_generosidad: Probabilidad (0.0 a 1.0) de perdonar una deserción.
-                                 Un valor común en estudios es 1/3 o 0.1.
-        """
         super(GenerousTitForTat, self).__init__(game, name)
         self.COOPERATIVE_ACTION = accion_cooperativa
         self.PUNISHMENT_ACTION = accion_castigo
         self.GENEROSITY_PROB = prob_generosidad
 
     def strategy(self, opponent: Player) -> int:
-        # Cooperar en la primera ronda
+        # Cooperate in the first round
         if not opponent.history:
             return self.COOPERATIVE_ACTION
 
         last_opponent_action = opponent.history[-1]
 
-        # 1. Si el oponente cooperó, nosotros cooperamos
+        # 1. If the opponent cooperated, we cooperate
         if last_opponent_action <= self.COOPERATIVE_ACTION:
             return self.COOPERATIVE_ACTION
 
-        # 2. Si el oponente desertó...
+        # 2. If the opponent defected...
         else:
-            # 3. Decidir si ser generoso (perdonar)
+            # 3. Decide whether to be generous (forgive) or punish
             if random() < self.GENEROSITY_PROB:
-                # Perdón: Romper el ciclo cooperando
+                # Forgiveness: Break the cycle by cooperating
                 return self.COOPERATIVE_ACTION
             else:
-                # Castigo: Seguir la regla de TFT
+                # Punishment: Follow the TFT rule
                 return self.PUNISHMENT_ACTION
 
 
 class ContriteTitForTat(Player):
     """
-    Tit-for-Tat Arrepentido (o "Estratega Arrepentido").
-
-    Esta estrategia se enfoca en el *otro* lado del ruido: ¿Qué pasa si *yo*
-    causé el problema?
-
-    Su lógica es:
-    1. Si la última ronda fue un éxito (Pago > 0), jugar como TFT.
-    2. Si la última ronda fue un fracaso (Pago = 0), asumir la culpa (arrepentirse)
-       y cooperar, esperando que esto rompa el ciclo de castigo.
+    A contrite (arrepentido en español) Tit-for-Tat.
+    This strategy focuses on the *other* side of noise: What if *I* caused the problem?
+    1. If the last round was a success (Payoff > 0), play like TFT.
+    2. If the last round was a failure (Payoff = 0), take the blame (be contrite) and cooperate, hoping this breaks the punishment cycle.
     """
 
     def __init__(
@@ -585,17 +518,17 @@ class ContriteTitForTat(Player):
         self.PUNISHMENT_ACTION = accion_castigo
 
     def strategy(self, opponent: Player) -> int:
-        # Cooperar en la primera ronda
+        # Cooperate in the first round
         if not self.history:
             return self.COOPERATIVE_ACTION
 
         my_last_payoff = self._get_last_payoff(opponent)
 
-        # 1. Arrepentimiento: Si el resultado fue 0, cooperar para arreglarlo.
+        # 1. Contrition: If the result was 0, cooperate to fix it.
         if my_last_payoff == 0:
             return self.COOPERATIVE_ACTION
 
-        # 2. Éxito: Si el pago fue > 0, jugar como TFT estándar.
+        # 2. Success: If the payoff was > 0, play like standard TFT.
         else:
             last_opponent_action = opponent.history[-1]
             if last_opponent_action > self.COOPERATIVE_ACTION:
@@ -842,8 +775,7 @@ class WeightedRandom23(Player):
 
 class BinarySunset(Player):
     """
-    A player that only plays binary numbers (2, 4) and that stars more agressive (4) until the sunset where ir colaborates (2).
-
+    A player that only plays binary numbers (2, 4) and that starts more agressive (4) until the sunset where it collaborates (2).
     """
 
     def __init__(self, game: Game, name: str = "BinarySunset"):
@@ -861,14 +793,175 @@ class BinarySunset(Player):
         return play
 
 
-# Advanced "Clever" implementations
+# Advanced "Intelligent" implementations
+class CleverAgent(Player):
+    """
+    A clever and adaptive strategy that seeks balance between cooperation, exploitation, and punishment.
+    It bases its logic on heuristics to maximize its score while avoiding long-term retaliation.
+
+    Strategy logic:
+    1.  **Priority 1 (Defense):** If the opponent is greedy (plays >= 3), punish by playing 3 to ensure a (0, 0) outcome.
+    2.  **Priority 2 (Safety):** If we just exploited (played 3 or 4 in the previous round) and the opponent is *not* greedy,
+        we should cooperate (play 2) to avoid patterns and "reset" the patience of "Permissive Tit-for-Tat" type opponents.
+    3.  **Priority 3 (Exploitation):** If the opponent cooperates (< 3) and we have not just exploited:
+        -   If they play 1: We play 4 (maximum exploitation).
+        -   If they play 0 or 2: With a probability (exploitation_prob), we play 3 to gain extra points.
+    4.  **Priority 4 (Cooperation):** If none of the exploitation conditions are met, cooperate by playing 2.
+    5.  **Priority 5 (Never Play 5):** This strategy never plays action 5.
+    """
+
+    COOP_ACTION = 2
+    EXPLOIT_ACTION = 3
+    PUNISH_ACTION = 3
+    MAX_EXPLOIT_ACTION = 4
+
+    def __init__(
+        self, game: Game, name: str = "Clever Agent", exploitation_prob: float = 0.20
+    ):
+        super(CleverAgent, self).__init__(game, name)
+
+        self.just_exploited = False
+        self.EXPLOITATION_PROB = exploitation_prob
+
+    def strategy(self, opponent: Player) -> int:
+
+        if not self.history:
+            self.just_exploited = False
+            return self.COOP_ACTION
+
+        last_opponent_action = opponent.history[-1]
+        my_action = 0
+
+        # --- PRIORITY 1: DEFENSE (Anti-Greed Rule) ---
+        if last_opponent_action >= 3:
+            my_action = self.PUNISH_ACTION
+            self.just_exploited = True
+            return my_action
+
+        # --- PRIORITY 2: SAFETY (Never Twice Rule) ---
+        if self.just_exploited:
+            my_action = self.COOP_ACTION
+            self.just_exploited = False  # Reset our state
+            return my_action
+
+        # --- PRIORITY 3: EXPLOITATION (Opportunism) ---
+        if last_opponent_action == 1:
+            my_action = self.MAX_EXPLOIT_ACTION
+            self.just_exploited = True
+            return my_action
+
+        if last_opponent_action in [0, 2]:
+            if random() < self.EXPLOITATION_PROB:
+                my_action = self.EXPLOIT_ACTION
+                self.just_exploited = True
+                return my_action
+            else:
+                my_action = self.COOP_ACTION
+                self.just_exploited = False
+                return my_action
+
+        # --- PRIORITY 4: COOPERATION (Fallback) ---
+        my_action = self.COOP_ACTION
+        self.just_exploited = False
+        return my_action
+
+
+class WSLS(Player):
+    """
+    Basic Win-Stay Lose-Shift adapted to 0..5 with aspiration
+    """
+
+    def __init__(self, game, aspiration=2.5, name="WSLS"):
+        super().__init__(game, name)
+        self.aspiration = aspiration
+
+    def strategy(self, opponent):
+        if not self.history:
+            return 2
+        last_payoff = self._get_last_payoff(opponent)
+        last_action = self.history[-1]
+        if last_payoff >= self.aspiration:
+            # Stay: repeat last action
+            return last_action
+        else:
+            # Shift: try to adjust to avoid collapse
+            if last_action + opponent.history[-1] > self.game.threshold:
+                return max(0, last_action - 1)
+            # If the failure was due to sum>max -> decrease
+            else:
+                return min(5, last_action + 1)
+
+
+class StrongAWSLS(Player):
+    """
+    Improved Adaptive Win-Stay Lose-Shift (AWSLS) strategy.
+    """
+
+    def __init__(
+        self,
+        game,
+        A=2.5,
+        delta=1,
+        forgive_prob=0.1,
+        punish_len=2,
+        a0=2,
+        name="Strong AWSLS",
+    ):
+        super().__init__(game, name)
+        self.A = A
+        self.delta = delta
+        self.f = forgive_prob
+        self.k = punish_len
+        self.a0 = a0
+        self._punish_timer = 0
+
+    def strategy(self, opponent):
+        if not self.history:
+            return self.a0
+
+        # Punishment phase
+        if self._punish_timer > 0:
+            return 0
+
+        last_payoff = self._get_last_payoff(opponent)
+        my_last = self.history[-1]
+        opp_last = opponent.history[-1]
+
+        # If last payoff was satisfactory, stay (with possibility to explore/forgive)
+        if last_payoff >= self.A:
+            # Small forgiveness: with probability f, try to increase (take advantage of cooperators)
+            if random() < self.f:
+                return min(5, my_last + self.delta)
+            return my_last
+
+        # Collapse case (sum>max): decrease
+        if my_last + opp_last > self.game.threshold:
+            recent = (
+                opponent.history[-3:]
+                if len(opponent.history) >= 3
+                else opponent.history
+            )
+            if (
+                all(o > (self.game.threshold - my_last) for o in recent)
+                and len(recent) >= 2
+            ):
+                self._punish_timer = self.k
+                return 0
+            return max(0, my_last - self.delta)
+
+        # If the opponent contributed little -> try to increase to capture more
+        if opp_last <= 2:
+            return min(5, my_last + self.delta)
+
+        # In other cases, decrease to avoid collapses
+        return max(0, my_last - self.delta)
+
+
 class AdaptivePavlov(Player):
     """
-    Estrategia Pavlov (Win-Stay, Lose-Shift) Adaptativa.
-
-    La estrategia "Pavlov" simple (vista en la respuesta anterior) alterna
-    entre dos acciones. Esta versión permite más flexibilidad en la
-    lógica "Lose-Shift" (Perder-Cambiar).
+    Adaptive Pavlov Strategy (it uses the idea behind WSLS).
+    The simple "Pavlov" strategy alternates between two actions.
+    This version allows more flexibility in the "Lose-Shift" logic.
     """
 
     def __init__(
@@ -926,190 +1019,6 @@ class AdaptivePavlov(Player):
                 )
 
 
-class AgenteAstuto(Player):
-    """
-    Una estrategia inteligente y adaptativa que busca el equilibrio entre
-    cooperación, explotación y castigo, siguiendo las reglas especificadas.
-
-    Lógica de la estrategia:
-    1.  **Prioridad 1 (Defensa):** Si el oponente es codicioso (juega >= 3),
-        castigarlo jugando 3 para asegurar un resultado de (0, 0).
-    2.  **Prioridad 2 (Seguridad):** Si acabamos de explotar (jugamos 3 o 4
-        en la ronda anterior) y el oponente *no* es codicioso,
-        debemos cooperar (jugar 2) para evitar patrones y "resetear"
-        la paciencia de los oponentes tipo "Permissive Tit-for-Tat".
-    3.  **Prioridad 3 (Explotación):** Si el oponente coopera (< 3) y
-        nosotros no acabamos de explotar:
-        -   Si juega 1: Jugamos 4 (máxima explotación).
-        -   Si juega 0 o 2: Con una probabilidad (exploitation_prob),
-            jugamos 3 para ganar puntos extra.
-    4.  **Prioridad 4 (Cooperación):** Si no se cumple ninguna de las
-        condiciones de explotación, cooperamos jugando 2.
-
-    Nunca juega 5.
-    """
-
-    # Acción cooperativa estándar
-    COOP_ACTION = 2
-    # Acción de explotación principal (para oponentes 0 o 2)
-    EXPLOIT_ACTION = 3
-    # Acción de castigo (para oponentes >= 3)
-    PUNISH_ACTION = 3
-    # Acción de explotación máxima (para oponentes 1)
-    MAX_EXPLOIT_ACTION = 4
-
-    def __init__(
-        self, game: Game, name: str = "Agente Astuto", exploitation_prob: float = 0.20
-    ):
-        """
-        Inicializa el Agente Astuto.
-
-        :param game: El juego que se está jugando.
-        :param name: Nombre de la estrategia.
-        :param exploitation_prob: Probabilidad (0.0 a 1.0) de intentar
-                                 explotar a un oponente cooperativo
-                                 (que jugó 0 o 2) en un turno dado.
-        """
-        super(AgenteAstuto, self).__init__(game, name)
-
-        # Estado interno: ¿Acabamos de explotar/castigar (jugar >= 3) en la ronda anterior?
-        self.just_exploited = False
-
-        # Probabilidad de ser "listillo"
-        self.EXPLOITATION_PROB = exploitation_prob
-
-    def strategy(self, opponent: Player) -> int:
-
-        # Empezamos cooperando para tantear.
-        if not self.history:
-            self.just_exploited = False
-            return self.COOP_ACTION
-
-        last_opponent_action = opponent.history[-1]
-        my_action = 0
-
-        # --- PRIORIDAD 1: DEFENSA (Regla Anti-Codicia) ---
-        # Frente a agentes que no colaboren (elecciones >=3), vamos a hacer que no puntúen.
-        # Frente a alguien que pone siempre 3 vamos a reventarle: si juegan 3, 4 o 5, jugamos 3. (3+3=6, 3+4=7, 3+5=8)
-        if last_opponent_action >= 3:
-            my_action = self.PUNISH_ACTION
-            self.just_exploited = True
-            return my_action
-
-        # --- PRIORIDAD 2: SEGURIDAD (Regla "Nunca dos veces") ---
-        # Si el oponente está cooperando (< 3), PERO nosotros acabamos de explotar, estamos forzados a cooperar.
-        if self.just_exploited:
-            # Forzamos la cooperación (jugamos 2) para resetear la paciencia del oponente (PermissiveTFT) y evitar patrones.
-            my_action = self.COOP_ACTION
-            self.just_exploited = False  # Reseteamos nuestro estado
-            return my_action
-
-        # --- PRIORIDAD 3: EXPLOTACIÓN (Oportunismo) ---
-        # Si llegamos aquí, significa que:
-        # 1. El oponente está cooperando (jugó < 3).
-        # 2. Nosotros NO acabamos de explotar (somos "libres" de actuar).
-
-        # Regla: "Si por lo que sea vemos que pone 1s, vamos a poner 4"
-        if last_opponent_action == 1:
-            my_action = self.MAX_EXPLOIT_ACTION
-            self.just_exploited = True
-            return my_action
-
-        if last_opponent_action in [0, 2]:
-            if random() < self.EXPLOITATION_PROB:
-                # ¡Explotar!
-                my_action = self.EXPLOIT_ACTION
-                self.just_exploited = True  # Marcamos que hemos explotado
-                return my_action
-            else:
-                # No explotamos esta vez, seguimos cooperando.
-                my_action = self.COOP_ACTION
-                self.just_exploited = False
-                return my_action
-
-        # --- PRIORIDAD 4: COOPERACIÓN (Fallback) ---
-        # Esta lógica cubre todos los casos (0, 1, 2).
-        # Si no se activó la explotación (por probabilidad o regla), la acción por defecto es cooperar.
-        my_action = self.COOP_ACTION
-        self.just_exploited = False
-        return my_action
-
-
-class WSLS_Adapted(Player):
-    "Win-Stay Lose-Shift adaptado a 0..5 con aspiración"
-
-    def __init__(self, game, aspiration=2.5, name="WSLS"):
-        super().__init__(game, name)
-        self.aspiration = aspiration
-
-    def strategy(self, opponent):
-        if not self.history:
-            return 2
-        last_payoff = self._get_last_payoff(opponent)
-        last_action = self.history[-1]
-        if last_payoff >= self.aspiration:
-            return last_action  # stay
-        else:
-            # shift: intentar ajustar para evitar colapso. Si el fallo fue por suma>max -> se reduce
-            if last_action + opponent.history[-1] > self.game.threshold:
-                return max(0, last_action - 1)
-            else:
-                return min(5, last_action + 1)
-
-
-class AWSLS(Player):
-    def __init__(
-        self, game, A=2.5, delta=1, forgive_prob=0.1, punish_len=2, a0=2, name="AWSLS"
-    ):
-        super().__init__(game, name)
-        self.A = A
-        self.delta = delta
-        self.f = forgive_prob
-        self.k = punish_len
-        self.a0 = a0
-        self._punish_timer = 0  # contador interno de castigo
-
-    def strategy(self, opponent):
-        # primer movimiento
-        if not self.history:
-            return self.a0
-        # si estamos en periodo de castigo: bajar a 0 durante k rondas
-        if self._punish_timer > 0:
-            return 0
-        # calcular último payoff
-        last_payoff = self._get_last_payoff(opponent)
-        my_last = self.history[-1]
-        opp_last = opponent.history[-1]
-        # si fue satisfactorio, stay (con posibilidad de explorar/perdonar)
-        if last_payoff >= self.A:
-            # small forgiveness: con prob f podemos try subir (aprovechar cooperadores)
-            if random() < self.f:
-                return min(5, my_last + self.delta)
-            return my_last
-        # Si no fue satisfactorio: diagnóstico
-        # Caso colapso (sum>max): disminuir
-        if my_last + opp_last > self.game.threshold:
-            # si el oponente lo provoca consistentemente, iniciamos castigo temporal
-            # detectamos patrón de explotación (si en las últimas 3 rondas_opponente consistentemente > threshold)
-            recent = (
-                opponent.history[-3:]
-                if len(opponent.history) >= 3
-                else opponent.history
-            )
-            if (
-                all(o > (self.game.threshold - my_last) for o in recent)
-                and len(recent) >= 2
-            ):
-                self._punish_timer = self.k  # activar castigo
-                return 0
-            return max(0, my_last - self.delta)
-        # Si el oponente contribuyó poco -> intentar subir para captar más
-        if opp_last <= 2:
-            return min(5, my_last + self.delta)
-        # en otros casos, bajar para evitar colapsos
-        return max(0, my_last - self.delta)
-
-
 class CopyCat(Player):
     """
     Childish player that copies the opponent's last move.
@@ -1119,11 +1028,6 @@ class CopyCat(Player):
         super(CopyCat, self).__init__(game, name)
 
     def strategy(self, opponent: Player) -> int:
-        """
-        Implements the CopyCat strategy:
-        1. In the first round, it plays 2 (cooperative move).
-        2. In subsequent rounds, it copies the opponent's last move.
-        """
         if not opponent.history:
             return 2
         return opponent.history[-1]
@@ -1131,16 +1035,10 @@ class CopyCat(Player):
 
 class FictitiousSoftmax(Player):
     """
-    Fictitious Play with softmax action selection.
+    Fictitious Player with softmax action selection.
 
     The agent keeps an empirical distribution of opponent actions.
-    Expected payoffs are computed and a softmax over them determines
-    the probability of choosing each action.
-
-    Parameters
-    ----------
-    tau : float
-        Temperature parameter for softmax. Lower tau = greedier behaviour.
+    Expected payoffs are computed and a softmax over them determines the probability of choosing each action.
     """
 
     def __init__(self, game, tau: float = 0.5, name: str = "FictitiousSoftmax"):
@@ -1178,17 +1076,13 @@ class FictitiousSoftmax(Player):
 
         # Softmax over expected values
         probs = self._softmax(expected_values)
-        # Random draw according to probs
         return choices(self.game.actions, weights=probs, k=1)[0]
 
 
 class RegretMatching(Player):
     """
-    Simplified regret-matching strategy for two-player repeated games.
-
     Tracks cumulative regrets for not having played each action in the past,
     and chooses next action with probability proportional to positive regrets.
-
     If all regrets are zero, the agent plays uniformly.
     """
 
@@ -1227,3 +1121,252 @@ class RegretMatching(Player):
         actions = list(self.game.actions)
         weights = [positive[a] for a in actions]
         return choices(actions, weights=weights, k=1)[0]
+
+
+class GreedyBayes(Player):
+    """
+    Bayesian opponent model using a Dirichlet prior over opponent actions.
+
+    - Prior: alpha[a] = 1 for all actions a (uniform uninformative prior)
+    - Posterior: alpha[a] += count of opponent playing action a
+    - Expected payoff of action i: E[u(i)] = sum_j P(j | posterior) * u(i, j)
+    """
+
+    def __init__(self, game, name: str = "GreedyBayes"):
+        super().__init__(game, name)
+        self.alpha = {a: 1.0 for a in self.game.actions}  # Dirichlet(1,...,1)
+
+    def _posterior_probs(self):
+        total = sum(self.alpha.values())
+        return {a: self.alpha[a] / total for a in self.game.actions}
+
+    def strategy(self, opponent):
+        # Update posterior with last observation
+        if opponent.history:
+            last_opp = opponent.history[-1]
+            self.alpha[last_opp] += 1.0
+
+        # Compute expected payoff for each action
+        probs = self._posterior_probs()
+        best_value = -inf
+        best_actions = []
+
+        for i in self.game.actions:
+            ev = 0.0
+            for j, pj in probs.items():
+                pay_i, _ = self.game.evaluate_result(i, j)
+                ev += pj * pay_i
+            if ev > best_value:
+                best_value = ev
+                best_actions = [i]
+            elif ev == best_value:
+                best_actions.append(i)
+
+        # Break ties uniformly
+        return choice(best_actions)
+
+
+class FictitiousPlay(Player):
+    """
+    Assumes the opponent plays according to a stationary probability distribution based on their historical frequency.
+    It chooses the best response to that distribution.
+    """
+
+    def __init__(self, game, name="FictitiousPlay"):
+        super().__init__(game, name)
+
+    def strategy(self, opponent: Self) -> int:
+        if not opponent.history:
+            return choice([2, 3])
+
+        opp_history = opponent.history
+        total_rounds = len(opp_history)
+        counts = Counter(opp_history)
+
+        best_action = 0
+        max_ev = -1.0
+
+        for my_act in self.game.actions:
+            ev = 0.0
+            for opp_act, count in counts.items():
+                prob = count / total_rounds
+                payoff, _ = self.game.evaluate_result(my_act, opp_act)
+                ev += prob * payoff
+
+            if ev > max_ev:
+                max_ev = ev
+                best_action = my_act
+            elif ev == max_ev:
+                if random() < 0.5:
+                    best_action = my_act
+
+        return best_action
+
+
+class AdaptiveAspiration(Player):
+    """
+    We follow the idea behind Karandikar et al. (1998): Satisficing strategy maintaining an aspiration level (alpha).
+    If payoff >= alpha, repeat action with high probability.
+    If payoff < alpha, explore randomly.
+    Alpha updates over time based on experience.
+    """
+
+    def __init__(
+        self, game, name="Aspirational", learning_rate=0.1, initial_aspiration=3.0
+    ):
+        super().__init__(game, name)
+        self.alpha = initial_aspiration
+        self.learning_rate = learning_rate
+        self.epsilon_noise = 0.05
+
+    def strategy(self, opponent: Self) -> int:
+        if not self.history:
+            return 3
+
+        my_last_action = self.history[-1]
+        my_last_payoff = self._get_last_payoff(opponent)
+
+        # 1. Update Aspiration Level: alpha(t+1) = (1-h) * alpha(t) + h * payoff(t)
+        self.alpha = (1 - self.learning_rate) * self.alpha + (
+            self.learning_rate * my_last_payoff
+        )
+
+        # 2. Decision Rule
+        # If satisfied (Payoff >= Aspiration) -> Stay (with high prob)
+        if my_last_payoff >= self.alpha:
+            if random() > self.epsilon_noise:
+                return my_last_action
+            else:
+                return choice(self.game.actions)
+        # If dissatisfied -> Shift (Explore)
+        else:
+            return choice(self.game.actions)
+
+
+class Enforcer(Player):
+    """
+    Tries to establish a fair equilibrium (2-3).
+    If the opponent plays greedy (>3) causing a crash, it enters a punishment mode playing 5 (guaranteeing 0 for opponent) for 'k' rounds.
+    """
+
+    def __init__(self, game, name="Enforcer"):
+        super().__init__(game, name)
+        self.punishment_remaining = 0
+        self.punishment_duration = 2  # How many rounds to punish
+
+    def strategy(self, opponent: Self) -> int:
+        if not opponent.history:
+            return 2  # Start offering a fair-ish deal (assuming they play 2)
+
+        last_opp_action = opponent.history[-1]
+        my_last_action = self.history[-1]
+        my_last_payoff = self._get_last_payoff(opponent)
+
+        if self.punishment_remaining > 0:
+            self.punishment_remaining -= 1
+            return 5  # Nobody earns anything.
+
+        # Analyze last round: If we crashed (payoff 0) AND it was because they were greedy (they asked > 2)
+        if my_last_payoff == 0 and last_opp_action >= 3:
+            self.punishment_remaining = self.punishment_duration
+            return 5
+
+        # If they are very passive (playing 0 or 1), take advantage slightly but safely
+        if last_opp_action <= 1:
+            return 4
+
+        # Standard cooperation: Try to hit the sum 5.
+        if last_opp_action == 2:
+            return 3
+        elif last_opp_action == 3:
+            return 2
+
+        return 2
+
+
+class ZDExtortion(Player):
+    """
+    We follow the idea behind Press & Dyson (2012), where P_me = chi * P_opponent.
+    Implements a ZD strategy that enforces a linear relationship where the agent earns more than the opponent (Extortion).
+    If the ratio of scores isn't favorable, it defects (plays 5) to lower opponent score.
+    """
+
+    def __init__(self, game, name="ZD Extortion", chi=1.2):
+        super().__init__(game, name)
+        self.chi = chi  # Extortion factor (I want to earn chi times what you earn)
+
+    def strategy(self, opponent: Self) -> int:
+        if not self.history:
+            return 2
+
+        my_score, opp_score = self.compute_scores(opponent)
+
+        if opp_score == 0:
+            opp_score = 0.1
+
+        current_ratio = my_score / opp_score
+
+        if current_ratio >= self.chi:
+            # I am winning by enough, so I play optimally to maximize absolute score
+            return 2  # Greedy but possible
+        else:
+            # I am losing relative ground, so I punish my opponent.
+            return 5
+
+
+class LOLA(Player):
+    """
+    We follow the idea behind J. Foerster, et al. (2018): Simplified Learning with Opponent-Learning Awareness.
+    It simulates: "If I play X, how will the opponent update their move next turn?"
+    Assumes opponent is a Naive learner (e.g., repeats if win, lowers if crash).
+    Since this is a simple tournament, we simplify: Best Response against their PREDICTED move.
+    """
+
+    def __init__(self, game, name="LOLA"):
+        super().__init__(game, name)
+
+    def _predict_opponent_next(
+        self, opponent: Self, hypothetical_my_action: int
+    ) -> int:
+        """
+        Predicts opponent's next move given their history and what I would play now with a Naive Learner model.
+        """
+        if not opponent.history:
+            return 2
+
+        last_opp = opponent.history[-1]
+        payoff_opp = 0
+        if hypothetical_my_action + last_opp <= 5:
+            payoff_opp = last_opp
+
+        if payoff_opp > 0:
+            return min(5, last_opp + 1) if random() < 0.2 else last_opp
+        else:
+            return max(0, last_opp - 1)
+
+    def strategy(self, opponent: Self) -> int:
+        if not opponent.history:
+            return 2
+
+        prev_my_act = self.history[-1]
+        prev_opp_act = opponent.history[-1]
+        _, prev_opp_pay = self.game.evaluate_result(prev_my_act, prev_opp_act)
+
+        predicted_opp_act = prev_opp_act
+        if prev_opp_pay == 0:
+            predicted_opp_act = max(0, prev_opp_act - 1)
+        else:
+            predicted_opp_act = prev_opp_act
+
+        best_act = 0
+        best_pay = -1
+
+        for act in self.game.actions:
+            pay, _ = self.game.evaluate_result(act, predicted_opp_act)
+            if pay > best_pay:
+                best_pay = pay
+                best_act = act
+            elif pay == best_pay and act > best_act:
+                best_act = act
+
+        return best_act

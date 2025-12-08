@@ -17,13 +17,14 @@ from .championship import Championship
 from .evolution import Evolution
 from .game import ACTIONS, THRESHOLD, Game
 from .match import Match
-from .player import (AWSLS, AdaptivePavlov, AgenteAstuto, Always0, Always3,
-                     BinarySunset, CastigadorInfernal, ContriteTitForTat,
-                     CopyCat, Detective, DeterministicSimpletron,
-                     FictitiousSoftmax, Focal5, GenerousTitForTat, GrimTrigger,
-                     HatTricker, PermissiveTitForTat, Player, Random23,
-                     RegretMatching, TitForTat, UniformRandom,
-                     WeightedRandom23, WSLS_Adapted)
+from .player import (LOLA, WSLS, AdaptiveAspiration, AdaptivePavlov, Always0,
+                     Always3, BinarySunset, CastigadorInfernal, CleverAgent,
+                     ContriteTitForTat, CopyCat, Detective,
+                     DeterministicSimpletron, Enforcer, FictitiousPlay,
+                     FictitiousSoftmax, Focal5, GenerousTitForTat, GreedyBayes,
+                     GrimTrigger, HatTricker, PermissiveTitForTat, Player,
+                     Random23, RegretMatching, StrongAWSLS, TitForTat,
+                     UniformRandom, WeightedRandom23, ZDExtortion)
 from .player_builder import AGENT_CLASSES, build_several_agents, create_agent
 from .tournament import Tournament
 
@@ -53,13 +54,19 @@ __all__ = [
     "HatTricker",
     "Random23",
     "WeightedRandom23",
-    "AgenteAstuto",
-    "WSLS_Adapted",
-    "AWSLS",
+    "CleverAgent",
+    "WSLS",
+    "StrongAWSLS",
     "BinarySunset",
     "CopyCat",
     "Championship",
     "build_several_agents",
     "FictitiousSoftmax",
     "RegretMatching",
+    "GreedyBayes",
+    "FictitiousPlay",
+    "AdaptiveAspiration",
+    "Enforcer",
+    "ZDExtortion",
+    "LOLA"
 ]
