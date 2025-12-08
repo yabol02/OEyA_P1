@@ -190,9 +190,10 @@ class Evolution:
             if len(current_counts) == 1:
                 break
 
-        print("\n" + "=" * 50)
-        print(f"EVOLUTIONARY TOURNAMENT FINISHED after {self.generations} generations.")
-        print("=" * 50)
+        if do_print:
+            print("\n" + "=" * 54)
+            print(f"EVOLUTIONARY TOURNAMENT FINISHED after {self.generations} generations.")
+            print("=" * 54, "\n\n")
 
         if do_plot:
             self.stackplot(count_evolution)

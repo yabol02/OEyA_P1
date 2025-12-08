@@ -46,6 +46,13 @@ class Championship:
         self.ranking = {player.name: 0 for player in players}
 
     def play(self, do_print: bool = False, return_dfs = False):
+        print("\n" + "=" * 32)
+        print("CHAMPIONSHIP TOURNAMENT STARTING")
+        print("The players are:")
+        for player in self.players:
+            print(f"- {player}")
+        print("=" * 32 + "\n")
+
         df_1 = self._first_phase(return_dfs=return_dfs)
         if do_print:
             self._print_ranking("First Phase")
@@ -71,12 +78,17 @@ class Championship:
         :param points_map: Dictionary of points by position (1, 2, 3, ...).
         :type points_map: dict
         """
+        max_rank_points = max(points_map.keys()) if points_map else 0
         print(f"\nUpdating ranking after {phase_name}\n")
         for rank, row in results.iterrows():
             self.ranking[row["player"].name] += points_map.get(rank + 1, 0)
             print(
                 f"Player {row['player'].name} gets {points_map.get(rank + 1, 0)} points for position {rank + 1}."
             )
+            if rank + 1 >= max_rank_points:
+                print("The rest of the players get 0 points.")
+                break
+        print()
 
     def _process_evolution_results(
         self, evolution_history: pd.DataFrame
@@ -152,8 +164,6 @@ class Championship:
         if return_dfs:
             df1 = res1.copy(deep=True)
         res1 = self._sort_results(res1)
-
-        # Guardar datos de la evolución TODO: no entiendo qué queremos hacer aquí
 
         # Update ranking based on self.points_1st_phase
         self._update_ranking(res1, self.points_1st_phase, "First Phase (Tournament)")

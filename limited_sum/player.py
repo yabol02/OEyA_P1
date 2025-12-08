@@ -1,10 +1,12 @@
 from abc import ABC, abstractmethod
+from math import exp
 from random import choice, choices, random
 from typing import Self
 
 from .game import Game
 
 
+# Base class for all player strategies
 class Player(ABC):
     """
     Abstract base class representing a generic player in a limited-sum game.
@@ -91,11 +93,7 @@ class Player(ABC):
         return f"{self.name} ({class_name})"
 
 
-# ---------------------------------------------------------------------
-# Basic strategies for the limited-sum game
-# ---------------------------------------------------------------------
-
-
+# Basic strategy implementations
 class Always0(Player):
     """
     Strategy that always selects action 0.
@@ -154,7 +152,7 @@ class Always3(Player):
 
 class UniformRandom(Player):
     """
-    Strategy that chooses an action uniformly at random.
+    Strategy that chooses an action uniformly at
     """
 
     def __init__(self, game: Game, name: str = "Uniform Random"):
@@ -170,7 +168,7 @@ class UniformRandom(Player):
 
     def strategy(self, opponent: Player) -> int:
         """
-        Chooses an action uniformly at random.
+        Chooses an action uniformly at
 
         :param opponent: The opposing player (unused in this strategy).
         :type opponent: Player
@@ -337,9 +335,7 @@ class CastigadorInfernal(Player):
         return 2
 
 
-# ---------------------------------------------------------------------
-# Basic strategies for the limited-sum game
-# ---------------------------------------------------------------------
+# Basic but "intelligent" implementations
 class DeterministicSimpletron(Player):
     """Starts cooperating (return 2) if the player cooperates it returns the same value
     If the oponent does not cooperate, it switches the strategy from cooperating to being greedy (return 3) or
@@ -563,9 +559,6 @@ class GenerousTitForTat(Player):
                 return self.PUNISHMENT_ACTION
 
 
-# --- Otros Modelos Robustos Configurables ---
-
-
 class ContriteTitForTat(Player):
     """
     Tit-for-Tat Arrepentido (o "Estratega Arrepentido").
@@ -609,70 +602,6 @@ class ContriteTitForTat(Player):
                 return self.PUNISHMENT_ACTION
             else:
                 return self.COOPERATIVE_ACTION
-
-
-class AdaptivePavlov(Player):
-    """
-    Estrategia Pavlov (Win-Stay, Lose-Shift) Adaptativa.
-
-    La estrategia "Pavlov" simple (vista en la respuesta anterior) alterna
-    entre dos acciones. Esta versión permite más flexibilidad en la
-    lógica "Lose-Shift" (Perder-Cambiar).
-    """
-
-    def __init__(
-        self,
-        game: Game,
-        name: str = "Adaptive Pavlov",
-        accion_cooperativa: int = 2,
-        accion_desercion: int = 3,
-        shift_strategy: str = "toggle",
-    ):
-        """
-        :param accion_cooperativa: Acción base de cooperación (default: 2).
-        :param accion_desercion: Acción base de deserción (default: 3).
-        :param shift_strategy: Cómo "cambiar" al perder (Pago=0).
-                               'toggle': Alterna entre accion_cooperativa y accion_desercion.
-                               'random': Elige aleatoriamente entre las dos.
-                               'always_coop': Siempre cambia a accion_cooperativa.
-        """
-        super(AdaptivePavlov, self).__init__(game, name)
-        self.COOP_ACTION = accion_cooperativa
-        self.DEFECT_ACTION = accion_desercion
-        self.SHIFT_STRATEGY = shift_strategy
-
-    def strategy(self, opponent: Player) -> int:
-        if not self.history:
-            return self.COOP_ACTION
-
-        my_last_payoff = self._get_last_payoff(opponent)
-        my_last_action = self.history[-1]
-
-        # 1. WIN-STAY (Ganar-Quedarse)
-        if my_last_payoff > 0:
-            return my_last_action
-
-        # 2. LOSE-SHIFT (Perder-Cambiar)
-        else:
-            if self.SHIFT_STRATEGY == "toggle":
-                return (
-                    self.DEFECT_ACTION
-                    if my_last_action == self.COOP_ACTION
-                    else self.COOP_ACTION
-                )
-
-            elif self.SHIFT_STRATEGY == "random":
-                return choice([self.COOP_ACTION, self.DEFECT_ACTION])
-
-            elif self.SHIFT_STRATEGY == "always_coop":
-                return self.COOP_ACTION
-
-            else:  # Default a 'toggle'
-                return (
-                    self.DEFECT_ACTION
-                    if my_last_action == self.COOP_ACTION
-                    else self.COOP_ACTION
-                )
 
 
 class Detective(Player):
@@ -911,6 +840,92 @@ class WeightedRandom23(Player):
         return choices([2, 3], weights=self.w)[0]
 
 
+class BinarySunset(Player):
+    """
+    A player that only plays binary numbers (2, 4) and that stars more agressive (4) until the sunset where ir colaborates (2).
+
+    """
+
+    def __init__(self, game: Game, name: str = "BinarySunset"):
+        super(BinarySunset, self).__init__(game, name)
+
+    def strategy(self, opponent: Player) -> int:
+        num_plays = len(opponent.history)
+        play = 2
+        if num_plays <= 20:
+            play = 4
+        elif num_plays <= 50:
+            if num_plays % 2 == 0:
+                play = 4
+
+        return play
+
+
+# Advanced "Clever" implementations
+class AdaptivePavlov(Player):
+    """
+    Estrategia Pavlov (Win-Stay, Lose-Shift) Adaptativa.
+
+    La estrategia "Pavlov" simple (vista en la respuesta anterior) alterna
+    entre dos acciones. Esta versión permite más flexibilidad en la
+    lógica "Lose-Shift" (Perder-Cambiar).
+    """
+
+    def __init__(
+        self,
+        game: Game,
+        name: str = "Adaptive Pavlov",
+        accion_cooperativa: int = 2,
+        accion_desercion: int = 3,
+        shift_strategy: str = "toggle",
+    ):
+        """
+        :param accion_cooperativa: Acción base de cooperación (default: 2).
+        :param accion_desercion: Acción base de deserción (default: 3).
+        :param shift_strategy: Cómo "cambiar" al perder (Pago=0).
+                               'toggle': Alterna entre accion_cooperativa y accion_desercion.
+                               'random': Elige aleatoriamente entre las dos.
+                               'always_coop': Siempre cambia a accion_cooperativa.
+        """
+        super(AdaptivePavlov, self).__init__(game, name)
+        self.COOP_ACTION = accion_cooperativa
+        self.DEFECT_ACTION = accion_desercion
+        self.SHIFT_STRATEGY = shift_strategy
+
+    def strategy(self, opponent: Player) -> int:
+        if not self.history:
+            return self.COOP_ACTION
+
+        my_last_payoff = self._get_last_payoff(opponent)
+        my_last_action = self.history[-1]
+
+        # 1. WIN-STAY (Ganar-Quedarse)
+        if my_last_payoff > 0:
+            return my_last_action
+
+        # 2. LOSE-SHIFT (Perder-Cambiar)
+        else:
+            if self.SHIFT_STRATEGY == "toggle":
+                return (
+                    self.DEFECT_ACTION
+                    if my_last_action == self.COOP_ACTION
+                    else self.COOP_ACTION
+                )
+
+            elif self.SHIFT_STRATEGY == "random":
+                return choice([self.COOP_ACTION, self.DEFECT_ACTION])
+
+            elif self.SHIFT_STRATEGY == "always_coop":
+                return self.COOP_ACTION
+
+            else:  # Default a 'toggle'
+                return (
+                    self.DEFECT_ACTION
+                    if my_last_action == self.COOP_ACTION
+                    else self.COOP_ACTION
+                )
+
+
 class AgenteAstuto(Player):
     """
     Una estrategia inteligente y adaptativa que busca el equilibrio entre
@@ -1068,12 +1083,12 @@ class AWSLS(Player):
         # si fue satisfactorio, stay (con posibilidad de explorar/perdonar)
         if last_payoff >= self.A:
             # small forgiveness: con prob f podemos try subir (aprovechar cooperadores)
-            if random.random() < self.f:
+            if random() < self.f:
                 return min(5, my_last + self.delta)
             return my_last
         # Si no fue satisfactorio: diagnóstico
         # Caso colapso (sum>max): disminuir
-        if my_last + opp_last > self.game.max_sum:
+        if my_last + opp_last > self.game.threshold:
             # si el oponente lo provoca consistentemente, iniciamos castigo temporal
             # detectamos patrón de explotación (si en las últimas 3 rondas_opponente consistentemente > threshold)
             recent = (
@@ -1082,7 +1097,7 @@ class AWSLS(Player):
                 else opponent.history
             )
             if (
-                all(o > (self.game.max_sum - my_last) for o in recent)
+                all(o > (self.game.threshold - my_last) for o in recent)
                 and len(recent) >= 2
             ):
                 self._punish_timer = self.k  # activar castigo
@@ -1093,27 +1108,6 @@ class AWSLS(Player):
             return min(5, my_last + self.delta)
         # en otros casos, bajar para evitar colapsos
         return max(0, my_last - self.delta)
-
-
-class BinarySunset(Player):
-    """
-    A player that only plays binary numbers (2, 4) and that stars more agressive (4) until the sunset where ir colaborates (2).
-
-    """
-
-    def __init__(self, game: Game, name: str = "BinarySunset"):
-        super(BinarySunset, self).__init__(game, name)
-
-    def strategy(self, opponent: Player) -> int:
-        num_plays = len(opponent.history)
-        play = 2
-        if num_plays <= 20:
-            play = 4
-        elif num_plays <= 50:
-            if num_plays % 2 == 0:
-                play = 4
-
-        return play
 
 
 class CopyCat(Player):
@@ -1133,3 +1127,103 @@ class CopyCat(Player):
         if not opponent.history:
             return 2
         return opponent.history[-1]
+
+
+class FictitiousSoftmax(Player):
+    """
+    Fictitious Play with softmax action selection.
+
+    The agent keeps an empirical distribution of opponent actions.
+    Expected payoffs are computed and a softmax over them determines
+    the probability of choosing each action.
+
+    Parameters
+    ----------
+    tau : float
+        Temperature parameter for softmax. Lower tau = greedier behaviour.
+    """
+
+    def __init__(self, game, tau: float = 0.5, name: str = "FictitiousSoftmax"):
+        super().__init__(game, name)
+        self.tau = tau
+
+    def _estimate_frequencies(self, opponent):
+        counts = {a: 0 for a in self.game.actions}
+        if opponent.history:
+            for act in opponent.history:
+                counts[act] += 1
+            total = len(opponent.history)
+            return {a: counts[a] / total for a in self.game.actions}
+        else:
+            # Uniform prior when no information
+            return {a: 1 / len(self.game.actions) for a in self.game.actions}
+
+    def _softmax(self, values):
+        max_v = max(values)
+        exps = [exp((v - max_v) / self.tau) for v in values]
+        Z = sum(exps)
+        return [x / Z for x in exps]
+
+    def strategy(self, opponent):
+        freqs = self._estimate_frequencies(opponent)
+
+        # Compute expected payoff for each i
+        expected_values = []
+        for i in self.game.actions:
+            ev = 0.0
+            for j, pj in freqs.items():
+                pay_i, _ = self.game.evaluate_result(i, j)
+                ev += pj * pay_i
+            expected_values.append(ev)
+
+        # Softmax over expected values
+        probs = self._softmax(expected_values)
+        # Random draw according to probs
+        return choices(self.game.actions, weights=probs, k=1)[0]
+
+
+class RegretMatching(Player):
+    """
+    Simplified regret-matching strategy for two-player repeated games.
+
+    Tracks cumulative regrets for not having played each action in the past,
+    and chooses next action with probability proportional to positive regrets.
+
+    If all regrets are zero, the agent plays uniformly.
+    """
+
+    def __init__(self, game, name: str = "RegretMatching"):
+        super().__init__(game, name)
+        self.regrets = {a: 0.0 for a in self.game.actions}
+
+    def strategy(self, opponent):
+        # First round: play middle action
+        if not self.history:
+            return 2
+
+        # Update regrets based on last round
+        last_action = self.history[-1]
+        last_opp = opponent.history[-1]
+
+        # Payoff obtained with actual action
+        actual_payoff, _ = self.game.evaluate_result(last_action, last_opp)
+
+        # Update regret for each possible alternative action
+        for a in self.game.actions:
+            alt_payoff, _ = self.game.evaluate_result(a, last_opp)
+            diff = alt_payoff - actual_payoff
+            if diff > 0:
+                self.regrets[a] += diff
+
+        # Compute probabilities proportional to positive regrets
+        positive = {a: max(r, 0) for a, r in self.regrets.items()}
+        total = sum(positive.values())
+
+        if total == 0:
+            # No regrets → uniform exploration
+            return choice(self.game.actions)
+
+        # Weighted random selection
+        actions = list(self.game.actions)
+        weights = [positive[a] for a in actions]
+        return choices(actions, weights=weights, k=1)[0]

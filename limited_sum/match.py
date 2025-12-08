@@ -110,15 +110,14 @@ class Match:
                 if self.score[0] > self.score[1]
                 else self.player_2.name
             )
-            print(f"The winner is {winner}, with a score of {max(self.score):.1f}.")
-            print("-" * 60)
+            print(f"The winner is {winner}, with a score of {max(self.score):.1f}.\n\n")
 
     def play_trace(self) -> dict:
         """
         Plays the match between both players.
 
         This method executes all rounds of the match, updates the internal state, and stores the final
-        result in ``self.score``.
+        result in `self.score`.
 
         It also returns a Dict with the history of actions and payoffs for each round.
 

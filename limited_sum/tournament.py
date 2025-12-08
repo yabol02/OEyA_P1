@@ -56,12 +56,11 @@ class Tournament:
         )
 
         if print_ranking:
-            tqdm.write("-" * 30)
+            tqdm.write("-" * 40)
             tqdm.write("FINAL RANKING")
-            tqdm.write("-" * 30)
             for rank, (player, score) in enumerate(self.ranking.items(), 1):
                 tqdm.write(f"#{rank}. {player.name.ljust(15)} | Score: {score:.2f}")
-            tqdm.write("-" * 30)
+            tqdm.write("-" * 40)
         self.__ranking_sorted = True
 
     def play(self, print_step=False, ext_progress: bool = False) -> None:
