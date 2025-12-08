@@ -191,7 +191,7 @@ class Championship:
             CastigadorInfernal(game),
         )
         evolution = ProportionalEvolution(
-            players=self.players+complex_environment_players,
+            players=self.players + complex_environment_players,
             stop_prob=self.stop_prob,
             max_rounds=self.max_rounds,
             error=self.error,
