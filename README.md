@@ -174,6 +174,25 @@ La clase `Championship` organiza una competición estructurada en tres fases dis
 
 </div>
 
+## Ejecución del código
+La P1 tiene varios ficheros de ejecución:
+
+### Código principal
+En el fichero [P1_main.py](P1_main.py) está la lógica completa de la práctica y sirve para probar todas las clases vistas en el apartado anterior: una partida (`Match`), un torneo (`Tournament`), una evolución (`Evolution`) y un campeonato (`Championship`). El objetivo de este fichero es mostrar el buen funcionamiento del código. Para ejecutar este fichero, hay que realizar:
+
+```bash
+py .\P1_main.py
+```
+
+### Campeonato largo y resultados
+Para hacer las distintas pruebas sobre el campeonato está el fichero [P1_championship.py](P1_championship.py). Para ejecutarlo correctamente, hace falta indicar la ruta donde guardar los resultados, por ejemplo:
+
+```bash
+py .\P1_championship.py ".\results\championship"
+```
+
+Este fichero almacena los resultados en crudo en ficheros *Parquet*, los cuales se pueden procesasr con el Notebook [analysis.ipynb](./notebooks/analysis.ipynb). Este Notebook lee los datos y los procesa para analizar los resultados y así poder elegir la mejor estrategia para el juego.
+
 # Práctica 2 - Métodos de optimización de funciones
 > [!WARNING]
 > Queda completar esta sección
