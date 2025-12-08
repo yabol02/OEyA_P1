@@ -264,7 +264,13 @@ class Evolution:
         if do_plot:
             self.stackplot(count_evolution)
 
-        self.history = count_evolution
+        # self.history = count_evolution
+        players_names = {p.name: p for p in self.players}
+        self.history = {
+            players_names[name]: counts
+            for name, counts in count_evolution.items()
+            if name in players_names
+        }
 
         return pd.concat(all_tournament_results, ignore_index=True)
 

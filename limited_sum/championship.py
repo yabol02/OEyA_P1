@@ -9,8 +9,6 @@ import numpy as np
 import pandas as pd
 
 from .evolution import ProportionalEvolution
-from .game import Game
-from .match import Match
 from .player import (Always0, Always3, CastigadorInfernal, Focal5, Player,
                      TitForTat, UniformRandom)
 from .tournament import Tournament
@@ -29,9 +27,9 @@ class Championship:
         stop_prob: float = 0.01,
         error: float = 0.01,
         repetitions: int = 2,
-        # representativeness: int = 5,
         generations: int = 10,
         initial_population: int = 20,
+        save_results: bool = False,
     ):
         self.players = players
         assert len(players) == len(
@@ -47,20 +45,22 @@ class Championship:
         # self.points_table = {}
         self.ranking = {player.name: 0 for player in players}
 
-    def play(self, do_print: bool = False):
-        self._first_phase()
+    def play(self, do_print: bool = False, return_dfs = False):
+        df_1 = self._first_phase(return_dfs=return_dfs)
         if do_print:
             self._print_ranking("First Phase")
 
-        self._second_phase()
+        df_2 = self._second_phase(return_dfs=return_dfs)
         if do_print:
             self._print_ranking("Second Phase")
 
-        self._third_phase()
+        df_3 = self._third_phase(return_dfs=return_dfs)
         if do_print:
             self._print_ranking("Third Phase")
 
         self._podium()
+        if return_dfs:
+            return df_1, df_2, df_3
 
     def _update_ranking(self, results: pd.DataFrame, points_map: dict, phase_name: str):
         """
@@ -138,7 +138,7 @@ class Championship:
             print(f"  {player}: {points} points")
         print("-" * 30)
 
-    def _first_phase(self):
+    def _first_phase(self, return_dfs: bool = False):
         tournament = Tournament(
             players=self.players,
             stop_prob=self.stop_prob,
@@ -149,14 +149,18 @@ class Championship:
 
         # Play tournament and process results
         res1 = tournament.play_trace()
+        if return_dfs:
+            df1 = res1.copy(deep=True)
         res1 = self._sort_results(res1)
 
         # Guardar datos de la evolución TODO: no entiendo qué queremos hacer aquí
 
         # Update ranking based on self.points_1st_phase
         self._update_ranking(res1, self.points_1st_phase, "First Phase (Tournament)")
+        if return_dfs:
+            return df1
 
-    def _second_phase(self):
+    def _second_phase(self, return_dfs: bool = False):
         evolution = ProportionalEvolution(
             players=self.players,
             stop_prob=self.stop_prob,
@@ -166,11 +170,17 @@ class Championship:
             generations=self.generations,
             initial_population=self.initial_population,
         )
-        evolution.play()
+        if return_dfs:
+            res2 = evolution.play_trace()
+            df2 = res2.copy(deep=True)
+        else:
+            evolution.play()
         res2 = self._process_evolution_results(evolution.history)
         self._update_ranking(res2, self.points_2nd_phase, "Second Phase (Evolution)")
+        if return_dfs:
+            return df2
 
-    def _third_phase(self):
+    def _third_phase(self, return_dfs: bool = False):
         game = self.players[0].game
         complex_environment_players = (
             Always0(game),
@@ -189,14 +199,15 @@ class Championship:
             generations=self.generations,
             initial_population=self.initial_population,
         )
-        evolution.play()
+        if return_dfs:
+            df3 = evolution.play_trace()
+        else:
+            evolution.play()
         res3 = self._process_evolution_results(evolution.history)
         res3 = res3[res3["player"].isin(self.players)]
-        self._update_ranking(
-            res3,
-            self.points_3rd_phase,
-            "Third Phase (Evolution in complex environment)",
-        )
+        self._update_ranking(res3, self.points_3rd_phase, "Third Phase (Evolution in complex environment)")
+        if return_dfs:
+            return df3
 
     def _podium(self):
         print("\nFinal Ranking:")
