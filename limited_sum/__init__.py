@@ -15,6 +15,7 @@ This package provides the following main components:
 """
 
 from .championship import Championship
+from .chosen_player import HatTricker
 from .evolution import Evolution, ProportionalEvolution
 from .game import ACTIONS, THRESHOLD, Game
 from .match import Match
@@ -23,10 +24,9 @@ from .player import (LOLA, WSLS, AdaptiveAspiration, AdaptivePavlov, Always0,
                      ContriteTitForTat, CopyCat, Detective,
                      DeterministicSimpletron, Enforcer, Fictitious,
                      FictitiousSoftmax, Focal5, GenerousTitForTat, GreedyBayes,
-                     GrimTrigger, HatTricker, PermissiveTitForTat, Player,
-                     Random23, RegretMatching, StrongAWSLS, TitForTat,
-                     UniformRandom, WeightedRandom23, ZDExtortion)
-from .player_builder import AGENT_CLASSES, build_several_agents, create_agent
+                     GrimTrigger, PermissiveTitForTat, Player, Random23,
+                     RegretMatching, StrongAWSLS, TitForTat, UniformRandom,
+                     WeightedRandom23, ZDExtortion)
 from .tournament import Tournament
 
 __all__ = [
@@ -60,6 +60,7 @@ __all__ = [
     "StrongAWSLS",
     "BinarySunset",
     "CopyCat",
+    "ProportionalEvolution",
     "Championship",
     "build_several_agents",
     "FictitiousSoftmax",

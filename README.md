@@ -36,7 +36,8 @@
   │  ├── match.py           # Partida entre dos jugadores y registro de payoffs
   │  ├── tournament.py      # Lógica del torneo todos-contra-todos
   │  ├── evolution.py       # Dinámica evolutiva
-  │  └── championship.py    # Campeonato compuesto de 3 fases
+  │  ├── championship.py    # Campeonato compuesto de 3 fases
+  │  └── chosen_player.py   # Implementación del jugador para el torneo de clase
 └── discarded/              # Directorio con ideas y evolutivos descartados durante la práctica
   │  └── ...
   ├── README.md             # Contiene la explicación del repositorio
