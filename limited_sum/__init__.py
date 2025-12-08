@@ -15,7 +15,7 @@ This package provides the following main components:
 """
 
 from .championship import Championship
-from .evolution import Evolution
+from .evolution import Evolution, ProportionalEvolution
 from .game import ACTIONS, THRESHOLD, Game
 from .match import Match
 from .player import (LOLA, WSLS, AdaptiveAspiration, AdaptivePavlov, Always0,

@@ -15,6 +15,9 @@
     <br />
     <br />
     <a href="#estructura-del-proyecto">Estructura</a> •
+    <a href="#p1">Práctica 1</a> •
+    <a href="#p2">Práctica 2</a> •
+    <a href="#p3">Práctica 3</a> •
     <a href="#autores">Autores</a> •
     <a href="#licencia">Licencia</a>
   </p>
@@ -87,6 +90,7 @@ Una vez instalado `uv`, la configuración es automática. Desde la raíz del rep
 
 <p align="right">(<a href="#readme-top">Volver arriba</a>)</p>
 
+<a id="p1"></a>
 # 🫱🏼‍🫲🏼 Práctica 1 - Juego de coordinación multi-acción (JCMA)
 
 ## Introducción
@@ -234,15 +238,20 @@ py .\P1_championship.py ".\results\championship"
 
 Este fichero almacena los resultados en crudo en ficheros *Parquet*, los cuales se pueden procesasr con el Notebook [analysis.ipynb](./notebooks/analysis.ipynb). Este Notebook lee los datos y los procesa para analizar los resultados y así poder elegir la mejor estrategia para el juego.
 
+<a id="p2"></a>
 # 📈 Práctica 2 - Métodos de optimización de funciones
 La P2 se compone de varios ficheros. El primero y más importante es [P2_enunciado.ipynb](P2_enunciado.ipynb), que contiene la solución de los ejercicios de optimización con restricciones. Dado que el ejercicio 6 consiste en describir un algorimto de optimización, se ha separado todo su desarrollo y explicación en varios ficheros adicionales:
 - [P2_nelder_mead.pdf](P2_nelder_mead.pdf): contiene la explicación paso a paso del algoritmo en una carilla A4.
 - [P2_nelder_mead.py](P2_nelder_mead.py): contiene el código del algoritmo. Este fichero se puede ejecutar para ver cómo optimiza diversas funciones: [Rosenbrock](https://es.wikipedia.org/wiki/Funci%C3%B3n_de_Rosenbrock), [Sphere de N dimensiones](https://es.wikipedia.org/wiki/N-esfera) y la función [Himmelblau](https://es.wikipedia.org/wiki/Funci%C3%B3n_de_Himmelblau). Muestra tanto el resultado final como el paso a paso (de las funciones donde exista la posibilidad).
 - [P2_nelder_mead.ipynb](P2_nelder_mead.ipynb): notebook con distintas funciones típicas a optimizar, la explicación del algoritmo y la posibilidad de emplear el código anterior para optimizar las funciones.
 
+<p align="right">(<a href="#readme-top">Volver arriba</a>)</p>
+
+<a id="p3"></a>
 # 🧠 Práctica 3 - Redes Neuronales Artificiales desde 0
 La P3 se corresponde a un único Notebook ([P3_enunciado.ipynb](P3_enunciado.ipynb)) con la creación paso a paso de un [perceptrón multicapa](https://es.wikipedia.org/wiki/Perceptr%C3%B3n). 
 
+<p align="right">(<a href="#readme-top">Volver arriba</a>)</p>
 
 # ⚠️ Problemas con ficheros grandes
 Debido a que los ficheros que resultan de ejecutar evoluciones grandes tienen mucho peso, se ha usado lfs (Github large file storage) para almacenarlos.
@@ -267,7 +276,7 @@ Windows
 1. Descargar el instalador oficial desde: https://git-lfs.com
 2. Ejecutarlo y seguir los pasos (instala git-lfs.exe automáticamente).
 2. Inicializar LFS en tu repositorio
-### 2.Inicial LFS en el repositorio
+### 2. Inicial LFS en el repositorio
 (Sólo hace falta una vez por repositorio)
 ```bash
 git lfs install
