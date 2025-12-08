@@ -56,4 +56,6 @@ class Game:
         return f"Game(actions={self.actions!r}, threshold={self.threshold!r})"
 
     def __str__(self) -> str:
-        return f"Limited-Sum Game: {len(self.actions)} actions, threshold {self.threshold}"
+        return (
+            f"Limited-Sum Game: {len(self.actions)} actions, threshold {self.threshold}"
+        )

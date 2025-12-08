@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from collections import Counter, defaultdict
+from collections import Counter
 from math import exp, inf
 from random import choice, choices, random
 from typing import Self

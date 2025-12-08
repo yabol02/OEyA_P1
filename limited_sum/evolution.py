@@ -1,5 +1,4 @@
 import copy
-import itertools
 import math
 from random import choices
 
@@ -192,7 +191,9 @@ class Evolution:
 
         if do_print:
             print("\n" + "=" * 54)
-            print(f"EVOLUTIONARY TOURNAMENT FINISHED after {self.generations} generations.")
+            print(
+                f"EVOLUTIONARY TOURNAMENT FINISHED after {self.generations} generations."
+            )
             print("=" * 54, "\n\n")
 
         if do_plot:

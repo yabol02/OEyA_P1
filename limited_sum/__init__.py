@@ -11,6 +11,7 @@ This package provides the following main components:
 - :class `Match`: Simulates a repeated game between two players.
 - :class `Tournament`: Runs multiple matches among different players.
 - :class `Evolution`: Models evolutionary dynamics among strategies.
+- :class `Championship`: Organizes a 3 phases championship (tournament and 2 evolutions) among players.
 """
 
 from .championship import Championship
@@ -68,5 +69,5 @@ __all__ = [
     "AdaptiveAspiration",
     "Enforcer",
     "ZDExtortion",
-    "LOLA"
+    "LOLA",
 ]
